@@ -1,0 +1,19 @@
+.input {
+  @apply w-full p-3 border rounded-xl focus:ring-2 focus:ring-orange-400;
+}
+
+.btn-orange {
+  @apply w-full bg-orange-500 text-white p-3 rounded-xl hover:bg-orange-600;
+}
+
+.btn-green {
+  @apply w-full bg-green-500 text-white p-3 rounded-xl hover:bg-green-600;
+}
+
+.input {
+  @apply w-full p-3 border rounded-xl mb-3 focus:ring-2 focus:ring-orange-400;
+}
+
+.btn-orange {
+  @apply w-full bg-orange-500 text-white p-3 rounded-xl hover:bg-orange-600;
+}
