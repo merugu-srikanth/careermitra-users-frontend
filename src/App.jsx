@@ -15,6 +15,7 @@ import Userprofilepage from "./pages/Userprofilepage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BlogDetail from "./pages/Blogs/BlogDetail";
 import BlogList from "./pages/Blogs/BlogList";
+import Footer from "./components/Footer";
 
 export default function App() {
   return (
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="/internship" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Internships Page</div>} />
           <Route path="/contact-us" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Contact Us Page</div>} />
         </Routes>
+        <Footer />
 
       </Router>
     </AuthProvider>

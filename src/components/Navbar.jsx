@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../assets/NewLogo.png"
+import axios from "axios";
 
-// ✅ import your AvatarSVG (adjust path)
-// import { AvatarSVG } from "../pages/Userprofilepage";
+const API_BASE = "https://g2u.mavenerp.in/g2uapi/public/api";
+
+
 /* ═══════════════ AVATAR ═══════════════ */
 const AvatarSVG = ({ size=64 }) => (
   <div style={{width:size,height:size}} className="rounded-2xl bg-orange-100 overflow-hidden flex items-end justify-center border-2 border-orange-200/50 shrink-0">
@@ -28,6 +30,8 @@ const AvatarSVG = ({ size=64 }) => (
 
 export default function Navbar() {
   const { user, token, logout } = useAuth();
+
+  const [profileData, setProfileData] = useState(null);
   const navigate = useNavigate();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,6 +39,26 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   const dropdownRef = useRef();
+
+  useEffect(() => {
+  if (!token) return;
+
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setProfileData(res.data.data); // ✅ IMPORTANT
+    } catch (err) {
+      console.error("Profile fetch error", err);
+    }
+  };
+
+  fetchProfile();
+}, [token]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -56,8 +80,8 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "Latest Jobs", path: "/latest-govt-jobs" },
-    { name: "Internships", path: "/internship" },
+    // { name: "Latest Jobs", path: "/latest-govt-jobs" },
+    // { name: "Internships", path: "/internship" },
     { name: "Blogs", path: "/blogs" },
     { name: "Contact", path: "/contact-us" },
   ];
@@ -102,12 +126,12 @@ export default function Navbar() {
               {/* AVATAR + NAME */}
               <div
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 cursor-pointer px-3 py-1 rounded-xl hover:bg-orange-50 transition"
+                className="flex items-center bg-orange-500 gap-2 cursor-pointer px-3 py-1 rounded-xl hover:bg-orange-500 transition"
               >
                 <AvatarSVG size={36} />
 
-                <span className="text-sm font-bold text-gray-800">
-                  {user?.name || "User"}
+                <span className="text-sm font-bold text-gray-100">
+                  {profileData?.name || user?.name || "User"}
                 </span>
               </div>
 
@@ -121,10 +145,10 @@ export default function Navbar() {
 
                     <div className="flex-1 min-w-0">
                       <h1 className="text-lg font-black text-gray-800 truncate">
-                        {user?.name || "User"}
+                       {profileData?.name || user?.name || "User"}
                       </h1>
                       <p className="text-orange-500 text-xs truncate">
-                        {user?.email}
+                        {profileData?.email || user?.email || "User"}
                       </p>
                     </div>
                   </div>

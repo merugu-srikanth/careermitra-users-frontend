@@ -244,7 +244,7 @@ export default function Home() {
                 onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
                 onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
-                  📱 Join WhatsApp
+                  REGISTER NOW
                 </a>
                 <a href="#" style={{
                   padding: "16px 40px", background: "#3b82f6", color: "#fff",
@@ -255,7 +255,7 @@ export default function Home() {
                 onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
                 onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
-                  ✈️ Join Telegram
+                  JOIN TELEGRAM
                 </a>
               </div>
             </div>
