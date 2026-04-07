@@ -13,6 +13,8 @@ import ScrollToTop from "./ScrollToTop";
 import Userprofilefillingpage from "./pages/Userprofilefillingpage";
 import Userprofilepage from "./pages/Userprofilepage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BlogDetail from "./pages/Blogs/BlogDetail";
+import BlogList from "./pages/Blogs/BlogList";
 
 export default function App() {
   return (
@@ -51,6 +53,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ProfileLayout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blogs"
+            element={
+              <ProtectedRoute>
+                <BlogList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blog/:slug"
+            element={
+              <ProtectedRoute>
+                <BlogDetail />
               </ProtectedRoute>
             }
           />
