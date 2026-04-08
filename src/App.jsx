@@ -16,6 +16,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import BlogDetail from "./pages/Blogs/BlogDetail";
 import BlogList from "./pages/Blogs/BlogList";
 import Footer from "./components/Footer";
+import AboutPage from "./pages/AboutPage";
+import Contact from "./pages/ContactPage";
 
 export default function App() {
   return (
@@ -60,17 +62,25 @@ export default function App() {
           <Route
             path="/blogs"
             element={
-              <ProtectedRoute>
                 <BlogList />
-              </ProtectedRoute>
             }
           />
           <Route
             path="/blog/:slug"
             element={
-              <ProtectedRoute>
                 <BlogDetail />
-              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+                <AboutPage />
+            }
+          />
+          <Route
+            path="/contact-us"
+            element={
+                <Contact />
             }
           />
           {/* <Route path="/user" element={<ProfileLayout />} /> */}

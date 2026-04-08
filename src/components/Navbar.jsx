@@ -82,6 +82,7 @@ export default function Navbar() {
     { name: "Home", path: "/" },
     // { name: "Latest Jobs", path: "/latest-govt-jobs" },
     // { name: "Internships", path: "/internship" },
+    { name: "About", path: "/about" },
     { name: "Blogs", path: "/blogs" },
     { name: "Contact", path: "/contact-us" },
   ];

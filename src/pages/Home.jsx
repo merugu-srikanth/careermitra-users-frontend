@@ -13,7 +13,7 @@ import SEO from "../components/SEO";
 
 const ArrowRightIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
   </svg>
 );
 
@@ -27,10 +27,10 @@ const dummyJobs = [
 ];
 
 const states = [
-  "Goa","Delhi","Sikkim","Assam","Bihar","Punjab","Odisha","Telangana","Andhra Pradesh",
-  "Kerala","Gujarat","Haryana","Tripura","Manipur","Mizoram","Nagaland","Karnataka",
-  "Jharkhand","Meghalaya","Rajasthan","Tamil Nadu","West Bengal","Uttarakhand",
-  "Uttar Pradesh","Madhya Pradesh","Himachal Pradesh","Arunachal Pradesh","Chhattisgarh","Maharashtra",
+  "Goa", "Delhi", "Sikkim", "Assam", "Bihar", "Punjab", "Odisha", "Telangana", "Andhra Pradesh",
+  "Kerala", "Gujarat", "Haryana", "Tripura", "Manipur", "Mizoram", "Nagaland", "Karnataka",
+  "Jharkhand", "Meghalaya", "Rajasthan", "Tamil Nadu", "West Bengal", "Uttarakhand",
+  "Uttar Pradesh", "Madhya Pradesh", "Himachal Pradesh", "Arunachal Pradesh", "Chhattisgarh", "Maharashtra",
 ];
 
 const categories = [
@@ -45,14 +45,14 @@ const categories = [
 export default function Home() {
   return (
     <div style={{ overflow: "hidden" }}>
-      
+
       <SEO
         title="Latest Govt Jobs 2026 | Career Mitra"
         description="Find latest government jobs, internships, and private jobs in India. Apply now with Career Mitra."
         keywords="govt jobs 2026, jobs in India, internships, freshers jobs"
         url="https://www.sootradhara.in/"
       />
-    
+
       <HeroSection />
 
       {/* Latest Jobs */}
@@ -89,8 +89,8 @@ export default function Home() {
               transition: "all 0.3s",
               fontSize: 15,
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#f97316"; e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ea580c"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#f97316"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ea580c"; }}
             >
               View All Opportunities <ArrowRightIcon />
             </Link>
@@ -241,8 +241,8 @@ export default function Home() {
                   textDecoration: "none", transition: "transform 0.2s",
                   boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
                 }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                  onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
                   REGISTER NOW
                 </a>
@@ -252,8 +252,8 @@ export default function Home() {
                   textDecoration: "none", border: "1px solid #60a5fa", transition: "transform 0.2s",
                   boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
                 }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                  onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
                   JOIN TELEGRAM
                 </a>
