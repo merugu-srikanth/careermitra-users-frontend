@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, user-runner]
+    runs-on: self-hosted
 
     steps:
       # 1. Checkout repo
