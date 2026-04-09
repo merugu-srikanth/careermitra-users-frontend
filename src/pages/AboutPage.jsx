@@ -68,15 +68,15 @@ const timeline = [
 ];
 
 const floatingIcons = [
-  { icon: "🎓", top: "6%",  left: "3%",  delay: 0,   size: "text-3xl" },
-  { icon: "🏛️", top: "12%", right: "5%", delay: 1.3, size: "text-2xl" },
+  { icon: "🎓", top: "20%",  left: "3%",  delay: 0,   size: "text-3xl" },
+  { icon: "🏛️", top: "22%", right: "5%", delay: 1.3, size: "text-2xl" },
   { icon: "📚", top: "30%", left: "1%",  delay: 2.1, size: "text-2xl" },
   { icon: "💼", top: "48%", right: "2%", delay: 0.7, size: "text-3xl" },
   { icon: "🌱", top: "65%", left: "4%",  delay: 3.0, size: "text-xl"  },
   { icon: "⭐", top: "78%", right: "6%", delay: 1.9, size: "text-2xl" },
   { icon: "🎯", top: "22%", left: "46%", delay: 4.2, size: "text-xl"  },
   { icon: "🤝", top: "88%", left: "28%", delay: 2.6, size: "text-2xl" },
-  { icon: "📊", top: "4%",  left: "58%", delay: 1.1, size: "text-2xl" },
+  { icon: "📊", top: "14%",  left: "58%", delay: 1.1, size: "text-2xl" },
   { icon: "🏅", top: "55%", left: "42%", delay: 3.4, size: "text-xl"  },
 ];
 
@@ -532,7 +532,15 @@ function CTASection() {
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white font-sans antialiased">
+    <div className=" relative min-h-screen bg-white font-sans antialiased">
+      {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
       <AboutHero />
       <StatsStrip />
       <VisionSection />

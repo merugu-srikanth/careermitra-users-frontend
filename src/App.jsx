@@ -72,7 +72,7 @@ export default function App() {
             }
           />
           <Route
-            path="/about"
+            path="/about-us"
             element={
                 <AboutPage />
             }

@@ -8,16 +8,16 @@ import { FaXTwitter } from "react-icons/fa6";
 
 // ─── FLOATING ICONS DATA ──────────────────────────────────────────────────────
 const floatingIcons = [
-  { icon: "🎓", top: "8%",  left: "4%",  delay: 0,   size: "text-3xl" },
-  { icon: "💼", top: "14%", right: "6%", delay: 1.2, size: "text-2xl" },
-  { icon: "📋", top: "34%", left: "2%",  delay: 2.4, size: "text-xl"  },
+  { icon: "🎓", top: "81%", left: "4%", delay: 0, size: "text-3xl" },
+  { icon: "💼", top: "24%", right: "6%", delay: 1.2, size: "text-2xl" },
+  { icon: "📋", top: "34%", left: "2%", delay: 2.4, size: "text-xl" },
   { icon: "🏛️", top: "54%", right: "3%", delay: 0.8, size: "text-3xl" },
-  { icon: "📊", top: "70%", left: "5%",  delay: 3.1, size: "text-xl"  },
+  { icon: "📊", top: "70%", left: "5%", delay: 3.1, size: "text-xl" },
   { icon: "🌱", top: "80%", right: "8%", delay: 1.8, size: "text-3xl" },
-  { icon: "✅", top: "24%", left: "47%", delay: 4.0, size: "text-lg"  },
+  { icon: "✅", top: "24%", left: "47%", delay: 4.0, size: "text-lg" },
   { icon: "📝", top: "89%", left: "29%", delay: 2.8, size: "text-2xl" },
-  { icon: "🚀", top: "5%",  left: "60%", delay: 1.5, size: "text-3xl" },
-  { icon: "⭐", top: "60%", left: "44%", delay: 3.5, size: "text-xl"  },
+  { icon: "🚀", top: "15%", left: "60%", delay: 1.5, size: "text-3xl" },
+  { icon: "⭐", top: "60%", left: "44%", delay: 3.5, size: "text-xl" },
 ];
 
 // ─── CONTACT INFO ─────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ const topics = ["State PSC", "UPSC / IAS", "Banking", "Railways", "Defence", "Ot
 // ─── ANIMATION VARIANTS ───────────────────────────────────────────────────────
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
 const staggerContainer = {
@@ -67,12 +67,12 @@ const staggerContainer = {
 
 const slideLeft = {
   hidden: { opacity: 0, x: -40 },
-  show:   { opacity: 1, x: 0, transition: { duration: 0.65, ease: "easeOut" } },
+  show: { opacity: 1, x: 0, transition: { duration: 0.65, ease: "easeOut" } },
 };
 
 const slideRight = {
   hidden: { opacity: 0, x: 40 },
-  show:   { opacity: 1, x: 0, transition: { duration: 0.65, ease: "easeOut" } },
+  show: { opacity: 1, x: 0, transition: { duration: 0.65, ease: "easeOut" } },
 };
 
 const floatAnim = (delay = 0) => ({
@@ -278,9 +278,9 @@ export default function ContactSection() {
             {/* socials */}
             <div className="flex gap-3">
               {[
-                { Icon: FaLinkedin,  color: "hover:text-blue-600  hover:border-blue-300"  },
-                { Icon: FaXTwitter,  color: "hover:text-gray-900  hover:border-gray-400"  },
-                { Icon: FaWhatsapp,  color: "hover:text-green-600 hover:border-green-300" },
+                { Icon: FaLinkedin, color: "hover:text-blue-600  hover:border-blue-300" },
+                { Icon: FaXTwitter, color: "hover:text-gray-900  hover:border-gray-400" },
+                { Icon: FaWhatsapp, color: "hover:text-green-600 hover:border-green-300" },
               ].map(({ Icon, color }, i) => (
                 <motion.button
                   key={i}
@@ -318,7 +318,7 @@ export default function ContactSection() {
                   {/* name + email row */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     {[
-                      { name: "name",  placeholder: "Full Name",     type: "text"  },
+                      { name: "name", placeholder: "Full Name", type: "text" },
                       { name: "email", placeholder: "Email Address", type: "email" },
                     ].map((f) => (
                       <div key={f.name}>
@@ -344,7 +344,7 @@ export default function ContactSection() {
                     </label>
                     <input
                       type="tel"
-                      name="phone"
+                      name="phone"                    
                       value={form.phone}
                       onChange={handleChange}
                       placeholder="+91 00000 00000"
@@ -363,11 +363,10 @@ export default function ContactSection() {
                           key={t}
                           whileTap={{ scale: 0.94 }}
                           onClick={() => setActiveTopic(t)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
-                            activeTopic === t
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${activeTopic === t
                               ? "bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200"
                               : "bg-white border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500"
-                          }`}
+                            }`}
                         >
                           {t}
                         </motion.button>

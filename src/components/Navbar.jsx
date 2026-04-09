@@ -16,19 +16,20 @@ const API_BASE = "https://g2u.mavenerp.in/g2uapi/public/api";
 
 /* ─── SOCIAL LINKS ─────────────────────────────────────────────────────────── */
 const socials = [
-  { Icon: FaLinkedin,  href: "#", color: "hover:text-blue-600",  label: "LinkedIn"  },
-  { Icon: FaTwitter,   href: "#", color: "hover:text-sky-500",   label: "Twitter"   },
-  { Icon: FaWhatsapp,  href: "#", color: "hover:text-green-500", label: "WhatsApp"  },
-  { Icon: FaInstagram, href: "#", color: "hover:text-pink-500",  label: "Instagram" },
-  { Icon: FaFacebook,  href: "#", color: "hover:text-blue-700",  label: "Facebook"  },
+  { Icon: FaLinkedin, href: "#", color: "hover:text-blue-600", label: "LinkedIn" },
+  { Icon: FaTwitter, href: "#", color: "hover:text-sky-500", label: "Twitter" },
+  { Icon: FaWhatsapp, href: "#", color: "hover:text-green-500", label: "WhatsApp" },
+  { Icon: FaInstagram, href: "#", color: "hover:text-pink-500", label: "Instagram" },
+  { Icon: FaFacebook, href: "#", color: "hover:text-blue-700", label: "Facebook" },
 ];
 
 /* ─── NAV LINKS ────────────────────────────────────────────────────────────── */
 const navLinks = [
-  { name: "Home",    path: "/",          Icon: FaHome        },
-  { name: "About",   path: "/about",     Icon: FaInfoCircle  },
-  { name: "Blogs",   path: "/blogs",     Icon: FaBlog        },
-  { name: "Contact", path: "/contact-us",Icon: FaPhoneAlt    },
+  { name: "HOME", path: "/", Icon: FaHome },
+  { name: "ABOUT US", path: "/about-us", Icon: FaInfoCircle },
+  { name: "CONTACT US", path: "/contact-us", Icon: FaPhoneAlt },
+  { name: "BLOGS", path: "/blogs", Icon: FaBlog },
+
 ];
 
 /* ─── AVATAR ───────────────────────────────────────────────────────────────── */
@@ -101,7 +102,7 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
-  const displayName  = profileData?.name  || user?.name  || "User";
+  const displayName = profileData?.name || user?.name || "User";
   const displayEmail = profileData?.email || user?.email || "";
 
   const isActive = (path) =>
@@ -130,12 +131,11 @@ export default function Navbar() {
 
       {/* ── MAIN NAV ───────────────────────────────────────────────────────── */}
       <nav
-  className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-    scrolled
-      ? "bg-white/90 backdrop-blur-md text-orange-500 shadow-md"
-      : "bg-transparent"
-  }`}
->
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled
+            ? "bg-white/90 backdrop-blur-md text-orange-500 shadow-md"
+            : "bg-transparent"
+          }`}
+      >
         {/* top accent line */}
         <div className="h-0.5 w-full bg-gradient-to-r from-orange-400 via-orange-500 to-green-500" />
 
@@ -152,12 +152,11 @@ export default function Navbar() {
               <Link
                 key={name}
                 to={path}
-                className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                  isActive(path)
+                className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${isActive(path)
                     ? "text-orange-500 bg-orange-50"
                     : "text-orange-500 hover:text-orange-500 hover:bg-orange-50"
-                }`}
-                
+                  }`}
+
               >
                 {name}
                 {isActive(path) && (
@@ -168,85 +167,85 @@ export default function Navbar() {
                 )}
               </Link>
             ))}
-              {/* DESKTOP RIGHT */}
-          <div className="hidden md:flex items-center gap-3">
-            {token ? (
-              <div
-                ref={dropdownRef}
-                className="relative"
-                onMouseEnter={() => setProfileOpen(true)}
-                onMouseLeave={() => setProfileOpen(false)}
-              >
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-all duration-200 shadow-sm shadow-orange-200"
+            {/* DESKTOP RIGHT */}
+            <div className="hidden md:flex items-center gap-3">
+              {token ? (
+                <div
+                  ref={dropdownRef}
+                  className="relative"
+                  onMouseEnter={() => setProfileOpen(true)}
+                  onMouseLeave={() => setProfileOpen(false)}
                 >
-                  <AvatarSVG size={32} />
-                  <span className="text-sm font-bold max-w-[100px] truncate">{displayName}</span>
-                  <motion.span animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <FaChevronDown size={11} />
-                  </motion.span>
-                </button>
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-all duration-200 shadow-sm shadow-orange-200"
+                  >
+                    <AvatarSVG size={32} />
+                    <span className="text-sm font-bold max-w-[100px] truncate">{displayName}</span>
+                    <motion.span animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <FaChevronDown size={11} />
+                    </motion.span>
+                  </button>
 
-                <AnimatePresence>
-                  {profileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
-                    >
-                      {/* profile header */}
-                      <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4">
-                        <div className="flex items-center gap-3">
-                          <AvatarSVG size={52} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white font-black text-base truncate">{displayName}</p>
-                            <p className="text-orange-100 text-xs truncate">{displayEmail}</p>
+                  <AnimatePresence>
+                    {profileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
+                      >
+                        {/* profile header */}
+                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4">
+                          <div className="flex items-center gap-3">
+                            <AvatarSVG size={52} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-black text-base truncate">{displayName}</p>
+                              <p className="text-orange-100 text-xs truncate">{displayEmail}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="p-3 space-y-2">
-                        <button
-                          onClick={() => { navigate("/user-dashboard"); setProfileOpen(false); }}
-                          className="w-full flex items-center gap-3 bg-orange-50 hover:bg-orange-100 text-orange-700 py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-200"
-                        >
-                          <FaTachometerAlt size={14} /> Dashboard
-                        </button>
-                        <button
-                          onClick={() => { logout(navigate); setProfileOpen(false); }}
-                          className="w-full flex items-center gap-3 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-200"
-                        >
-                          <FaSignOutAlt size={14} /> Logout
-                        </button>
-                      </div>
+                        <div className="p-3 space-y-2">
+                          <button
+                            onClick={() => { navigate("/user-dashboard"); setProfileOpen(false); }}
+                            className="w-full flex items-center gap-3 bg-orange-50 hover:bg-orange-100 text-orange-700 py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-200"
+                          >
+                            <FaTachometerAlt size={14} /> Dashboard
+                          </button>
+                          <button
+                            onClick={() => { logout(navigate); setProfileOpen(false); }}
+                            className="w-full flex items-center gap-3 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-200"
+                          >
+                            <FaSignOutAlt size={14} /> Logout
+                          </button>
+                        </div>
 
-                      {/* social strip */}
-                      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-4">
-                        {socials.map(({ Icon, href, label, color }) => (
-                          <a key={label} href={href} aria-label={label} className={`text-gray-400 ${color} transition-colors duration-200`}>
-                            <Icon size={15} />
-                          </a>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-full font-semibold text-sm shadow-sm shadow-orange-200 hover:shadow-md hover:shadow-orange-200 transition-all duration-200"
-              >
-                <FaSignInAlt size={13} /> Login
-              </Link>
-            )}
+                        {/* social strip */}
+                        <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-4">
+                          {socials.map(({ Icon, href, label, color }) => (
+                            <a key={label} href={href} aria-label={label} className={`text-gray-400 ${color} transition-colors duration-200`}>
+                              <Icon size={15} />
+                            </a>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-full font-semibold text-sm shadow-sm shadow-orange-200 hover:shadow-md hover:shadow-orange-200 transition-all duration-200"
+                >
+                  <FaSignInAlt size={13} /> Login
+                </Link>
+              )}
+            </div>
           </div>
-          </div>
 
-        
+
 
           {/* MOBILE HAMBURGER */}
           <button
@@ -330,11 +329,10 @@ export default function Navbar() {
                       >
                         <Link
                           to={path}
-                          className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 ${
-                            isActive(path)
+                          className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 ${isActive(path)
                               ? "bg-orange-500 text-white shadow-md shadow-orange-200"
                               : "text-gray-700 hover:bg-orange-50 hover:text-orange-500"
-                          }`}
+                            }`}
                         >
                           <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isActive(path) ? "bg-white/20" : "bg-orange-100"}`}>
                             <Icon size={15} className={isActive(path) ? "text-white" : "text-orange-500"} />
