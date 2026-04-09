@@ -1,0 +1,43 @@
+name: Deploy User Frontend (Vite React)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 3. Build project (Vite → dist/)
+      - name: Build project
+        run: npm run build
+
+      # 4. Deploy safely (no broken state)
+      - name: Deploy build to server
+        run: |
+          echo "Starting deployment..."
+
+          # Create temp folder
+          rm -rf /var/www/careermitra-user-temp
+          mkdir -p /var/www/careermitra-user-temp
+
+          # Copy new build
+          cp -r dist/* /var/www/careermitra-user-temp/
+
+          # Remove old build
+          rm -rf /var/www/careermitra-user/*
+
+          # Move new build to live folder
+          mv /var/www/careermitra-user-temp/* /var/www/careermitra-user/
+
+          echo "Deployment completed successfully 🚀"
