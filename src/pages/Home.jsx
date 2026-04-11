@@ -163,10 +163,10 @@ export default function Home() {
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
           <AnimatedSection animation="fade-up">
             <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#111827", marginBottom: 8 }}>
-              Jobs by <span style={{ color: "#f97316" }}>Category</span>
+             Government Jobs by  <span style={{ color: "#f97316" }}>Qualification 2026</span>
             </h2>
             <p style={{ color: "#6b7280", fontSize: 17, marginBottom: 64 }}>
-              Browse based on your specific academic qualifications.
+              Get job alerts tailored specifically to your qualification
             </p>
           </AnimatedSection>
 
@@ -229,10 +229,10 @@ export default function Home() {
           <AnimatedSection animation="fade-up">
             <div style={{ position: "relative", zIndex: 1, padding: "64px 32px", textAlign: "center", color: "#fff" }}>
               <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, marginBottom: 24 }}>
-                Never Miss An Alert!
+                Stay Updated With Every Government Job Notifications 2026
               </h2>
               <p style={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", opacity: 0.9, marginBottom: 40, maxWidth: 560, margin: "0 auto 40px" }}>
-                Get free real-time updates on WhatsApp or Telegram for every notification.
+A missed job opportunity hurts more than a rejection. It turns into lasting regret for thousands of students everyday, simply due to late updates. With CareerMitra, get timely personalized job updates directly to your mobile/email.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
                 <a href="#" style={{
@@ -244,7 +244,7 @@ export default function Home() {
                   onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
-                  REGISTER NOW
+                   Subscribe for Free Job Alerts
                 </a>
                 <a href="#" style={{
                   padding: "16px 40px", background: "#3b82f6", color: "#fff",

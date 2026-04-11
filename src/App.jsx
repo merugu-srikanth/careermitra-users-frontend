@@ -18,6 +18,7 @@ import BlogList from "./pages/Blogs/BlogList";
 import Footer from "./components/Footer";
 import AboutPage from "./pages/AboutPage";
 import Contact from "./pages/ContactPage";
+import "./App.css"
 
 export default function App() {
   return (

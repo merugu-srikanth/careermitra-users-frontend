@@ -2,14 +2,14 @@ import { useState } from "react";
 import AnimatedSection from "./Animatedsection";
 
 const features = [
-  { id: 1, icon: "🔔", title: "Personalized Alerts", description: "We notify you of relevant government job openings based on your unique profile. Never miss an opportunity that matches your qualifications.", bg: "#fff7ed", iconBg: "#ffedd5", iconColor: "#ea580c" },
-  { id: 2, icon: "🏢", title: "Beyond Campus Placements", description: "We uncover lesser-known public sector careers often overlooked by students. Explore opportunities in PSUs, autonomous bodies, and more.", bg: "#f0fdf4", iconBg: "#dcfce7", iconColor: "#16a34a" },
-  { id: 3, icon: "💡", title: "Unthought Careers", description: "Otherwise less known and preferred careers like translators, secretarial assistance, parliamentary officials, and protocol officers will be focused.", bg: "#faf5ff", iconBg: "#ede9fe", iconColor: "#7c3aed" },
-  { id: 4, icon: "🎓", title: "Support for +2 Graduates", description: "Opportunities curated specifically for intermediate, ITI, or Polytechnic graduates. SSC GD, RRB Group D, State Police, and more.", bg: "#eff6ff", iconBg: "#dbeafe", iconColor: "#1d4ed8" },
-  { id: 5, icon: "📍", title: "Pan-India Coverage", description: "Track job openings across all states and central departments. From Kashmir to Kanyakumari, we've got you covered.", bg: "#fff1f2", iconBg: "#ffe4e6", iconColor: "#e11d48" },
-  { id: 6, icon: "🛡️", title: "Strategic Sectors", description: "Priority alerts from defence, space research (ISRO), DRDO, forest services, intelligence bureaus, and more strategic departments.", bg: "#f8fafc", iconBg: "#e2e8f0", iconColor: "#334155" },
-  { id: 7, icon: "👥", title: "Inclusive Career Discovery", description: "Special focus will be given to professionals and technical fields like polytechnic, ITI, diploma holders, and vocational training graduates.", bg: "#f0fdfa", iconBg: "#ccfbf1", iconColor: "#0d9488" },
-  { id: 8, icon: "📄", title: "Recruitment Process", description: "A brief overview of how and what the recruitment process is all about - application, exam patterns, interviews, and final selection.", bg: "#fffbeb", iconBg: "#fef3c7", iconColor: "#d97706" },
+  { id: 1, icon: "🔔", title: "Personalized Job Alerts:", description: "Get notified of relevant government job openings tailored to your qualifications.", bg: "#fff7ed", iconBg: "#ffedd5", iconColor: "#ea580c" },
+  { id: 2, icon: "🏢", title: "Beyond Campus Placements:", description: "Uncover lesser-known public sector careers that are often overlooked. Explore opportunities in PSUs, autonomous bodies and more.", bg: "#f0fdf4", iconBg: "#dcfce7", iconColor: "#16a34a" },
+  { id: 3, icon: "💡", title: "Unthought Careers:", description: "Tapping on the untapped careers like Translators, Secretarial Assistance, Parliamentary Officials, Protocol Officers.", bg: "#faf5ff", iconBg: "#ede9fe", iconColor: "#7c3aed" },
+  { id: 4, icon: "🎓", title: "Support for +2 Graduates", description: "Careers like SSC, GD, RRB Group D, State Police and more, curated specifically for intermediate, ITI or Polytechnic Graduates.", bg: "#eff6ff", iconBg: "#dbeafe", iconColor: "#1d4ed8" },
+  { id: 5, icon: "📍", title: "Pan-India Coverage", description: "Track job openings across all the states from kashmir to kanyakumari. Both state and central level job opportunities are covered in one place.", bg: "#fff1f2", iconBg: "#ffe4e6", iconColor: "#e11d48" },
+  { id: 6, icon: "🛡️", title: "Strategic Sectors", description: "Get priority alerts from the strategic departments like defence, Space research(ISRO), DRDO, Forest Services, Intelligence Bureau and more.", bg: "#f8fafc", iconBg: "#e2e8f0", iconColor: "#334155" },
+  { id: 7, icon: "👥", title: "Inclusive Career Discovery", description: "Targeted focus on professional and technical fields like Polytechnic, ITI, Diploma holders and Vocational training graduates.", bg: "#f0fdfa", iconBg: "#ccfbf1", iconColor: "#0d9488" },
+  { id: 8, icon: "📄", title: "Gain insights about the recruitment process– application, exam patterns, interviews and final selection", bg: "#fffbeb", iconBg: "#fef3c7", iconColor: "#d97706" },
 ];
 
 const stats = [
@@ -98,6 +98,7 @@ export default function StudentCareerSession() {
           {features.map((f, i) => (
             <AnimatedSection key={f.id} animation="fade-up" delay={i * 60}>
               <div
+              className="h-70"
                 style={{
                   background: f.bg, borderRadius: 20, padding: 24,
                   border: "1px solid rgba(0,0,0,0.04)",
