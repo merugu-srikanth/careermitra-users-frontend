@@ -27,6 +27,17 @@ const socials = [
 const navLinks = [
   { name: "HOME", path: "/", Icon: FaHome },
   { name: "ABOUT US", path: "/about-us", Icon: FaInfoCircle },
+  {
+    name: "JOBS",
+    dropdown: [
+      // { name: "SSC Jobs 2026", path: "/jobs/ssc" },
+      { name: "SSC Jobs 2026", path: "/coming-soon" },
+      { name: "Bank Jobs 2026", path: "/coming-soon" },
+      { name: "Railway Jobs 2026", path: "/coming-soon" },
+      { name: "Defence Jobs 2026", path: "/coming-soon" },
+      { name: "Police Jobs 2026", path: "/coming-soon" },
+    ],
+  },
   { name: "CONTACT US", path: "/contact-us", Icon: FaPhoneAlt },
   { name: "BLOGS", path: "/blogs", Icon: FaBlog },
 
@@ -66,6 +77,7 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [jobsOpen, setJobsOpen] = useState(false);
 
   const dropdownRef = useRef();
 
@@ -148,25 +160,68 @@ export default function Navbar() {
 
           {/* DESKTOP LINKS */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ name, path }) => (
-              <Link
-                key={name}
-                to={path}
-                className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${isActive(path)
-                    ? "text-orange-500 bg-orange-50"
-                    : "text-orange-500 hover:text-orange-500 hover:bg-orange-50"
-                  }`}
+            <div className="hidden md:flex items-center gap-1">
+  {navLinks.map((link) => {
+    // 🔹 NORMAL LINK
+    if (!link.dropdown) {
+      return (
+        <Link
+          key={link.name}
+          to={link.path}
+          className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+            isActive(link.path)
+              ? "text-orange-500 bg-orange-50"
+              : "text-orange-500 hover:bg-orange-50"
+          }`}
+        >
+          {link.name}
+        </Link>
+      );
+    }
 
-              >
-                {name}
-                {isActive(path) && (
-                  <motion.div
-                    layoutId="nav-indicator"
-                    className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-500"
-                  />
-                )}
-              </Link>
-            ))}
+    // 🔹 DROPDOWN (JOBS)
+    return (
+      <div
+        key={link.name}
+        className="relative"
+        onMouseEnter={() => setJobsOpen(true)}
+        onMouseLeave={() => setJobsOpen(false)}
+      >
+        <button className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-orange-500 hover:bg-orange-50 rounded-xl">
+          {link.name}
+          <FaChevronDown
+            className={`transition-transform duration-200 ${
+              jobsOpen ? "rotate-180" : ""
+            }`}
+            size={12}
+          />
+        </button>
+
+        <AnimatePresence>
+          {jobsOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute left-0 top-12 w-64 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
+            >
+              {link.dropdown.map((item, i) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className="block px-5 py-3 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  })}
+</div>
             {/* DESKTOP RIGHT */}
             <div className="hidden md:flex items-center gap-3">
               {token ? (
@@ -320,30 +375,36 @@ export default function Navbar() {
                 <div className="px-4 py-4">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-2">Navigation</p>
                   <nav className="space-y-1">
-                    {navLinks.map(({ name, path, Icon }, i) => (
-                      <motion.div
-                        key={name}
-                        initial={{ opacity: 0, x: 24 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.07 + 0.1 }}
-                      >
-                        <Link
-                          to={path}
-                          className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 ${isActive(path)
-                              ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                              : "text-gray-700 hover:bg-orange-50 hover:text-orange-500"
-                            }`}
-                        >
-                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isActive(path) ? "bg-white/20" : "bg-orange-100"}`}>
-                            <Icon size={15} className={isActive(path) ? "text-white" : "text-orange-500"} />
-                          </span>
-                          {name}
-                          {isActive(path) && (
-                            <span className="ml-auto w-2 h-2 rounded-full bg-white" />
-                          )}
-                        </Link>
-                      </motion.div>
-                    ))}
+                    {navLinks.map((link, i) => {
+  if (!link.dropdown) {
+    return (
+      <Link
+        key={link.name}
+        to={link.path}
+        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-orange-50"
+      >
+        {link.name}
+      </Link>
+    );
+  }
+
+  return (
+    <div key={link.name}>
+      <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">
+        {link.name}
+      </p>
+      {link.dropdown.map((item) => (
+        <Link
+          key={item.name}
+          to={item.path}
+          className="block px-6 py-2 text-sm text-gray-700 hover:text-orange-500"
+        >
+          {item.name}
+        </Link>
+      ))}
+    </div>
+  );
+})}
                   </nav>
                 </div>
 

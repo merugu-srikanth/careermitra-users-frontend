@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VerifyOtp from "./pages/RegisterVerify";
+import ResetPassword from "./pages/ResetPassword";
 import UserProfilePage from "./pages/Userprofilepage";
 import ProfileLayout from "./pages/Profilre";
 import ScrollToTop from "./ScrollToTop";
@@ -19,6 +20,7 @@ import Footer from "./components/Footer";
 import AboutPage from "./pages/AboutPage";
 import Contact from "./pages/ContactPage";
 import "./App.css"
+import ComingSoon from "./pages/Commingsoon/ComingSoon";
 
 export default function App() {
   return (
@@ -34,6 +36,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/user-dashboard"
             element={
@@ -82,6 +85,12 @@ export default function App() {
             path="/contact-us"
             element={
                 <Contact />
+            }
+          />
+          <Route
+            path="/coming-soon"
+            element={
+                <ComingSoon />
             }
           />
           {/* <Route path="/user" element={<ProfileLayout />} /> */}

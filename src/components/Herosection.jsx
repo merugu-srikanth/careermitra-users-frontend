@@ -1,119 +1,104 @@
-import { useEffect, useState } from "react";
+import React, { useRef } from 'react';
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import heroImg from "../assets/bg-images/hero-bg-img2.png";
-
-const sparkles = [
-  { top: "12%", left: "7%", delay: 0, size: "text-base" },
-  { top: "20%", left: "89%", delay: 0.7, size: "text-base" },
-  { top: "68%", left: "4%", delay: 1.4, size: "text-[0.9rem]" },
-  { top: "73%", left: "93%", delay: 0.3, size: "text-[1.3rem]" },
-  { top: "44%", left: "2%", delay: 1, size: "text-[0.8rem]" },
-  { top: "38%", left: "96%", delay: 1.7, size: "text-base" },
-];
-
-const particles = [
-  { top: "36%", left: "72%", delay: 0 },
-  { top: "15%", left: "68%", delay: 0.3 },
-  { top: "91%", left: "24%", delay: 0.6 },
-  { top: "96%", left: "31%", delay: 0.9 },
-  { top: "3%", left: "15%", delay: 1.2 },
-  { top: "61%", left: "9%", delay: 1.5 },
-];
+import { motion, } from 'framer-motion';
+import { 
+  FaBalanceScale, 
+  FaUserShield, 
+  FaGraduationCap, 
+  FaHandHoldingHeart, 
+  FaHospitalSymbol, 
+  FaGavel 
+} from 'react-icons/fa';
+import heroImg from "../assets/bg-images/hero-bg-img2.webp";
+import center from "../assets/bg-images/CenterIMG.webp";
 
 const trust = ["🏛️ 100% Free", "🔔 Daily Updates", "📱 No Spam", "🆓 10K+ Users Subscribed"];
 
-export default function HeroSection() {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0c0500] ">
+const governmentNodes = [
+  { icon: <FaGavel />, color: 'border-blue-500', pos: 'top-[12%] right-[22%]', size: 'w-24 h-24', label: 'Judiciary', speed: 40 },
+  { icon: <FaUserShield />, color: 'border-pink-500', pos: 'top-[38%] right-[2%]', size: 'w-20 h-20', label: 'Police', speed: -30 },
+  { icon: <FaHandHoldingHeart />, color: 'border-purple-500', pos: 'bottom-[18%] right-[4%]', size: 'w-18 h-18', label: 'Welfare', speed: 50 },
+  { icon: <FaHospitalSymbol />, color: 'border-orange-500', pos: 'top-[18%] left-[25%]', size: 'w-20 h-20', label: 'Health', speed: -45 },
+  { icon: <FaGraduationCap />, color: 'border-yellow-400', pos: 'bottom-[35%] left-[8%]', size: 'w-16 h-16', label: 'UPSC', speed: 35 },
+];
 
-      {/* ── Background Image with Smooth Pan/Zoom ── */}
+export default function IntegratedHero() {
+  const containerRef = useRef(null);
+
+  // Mouse Parallax Logic
+  const handleMouseMove = (e) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    const x = (clientX / innerWidth - 0.5) * 20;
+    const y = (clientY / innerHeight - 0.5) * 20;
+    // We apply this via CSS variables for performance
+    containerRef.current.style.setProperty('--mouse-x', `${x}px`);
+    containerRef.current.style.setProperty('--mouse-y', `${y}px`);
+  };
+
+  return (
+    <section 
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0c0500] selection:bg-amber-500/60"
+    >
+      {/* 1. Background Layer */}
       <motion.div
-        initial={{ scale: 1.1, x: "-2%" }}
-        animate={{
-          scale: [1.1, 1.15, 1.1],
-          x: ["-2%", "2%", "-2%"],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="absolute inset-0 z-0"
+        animate={{ scale: [1, 1.05, 1], rotate: [0, 1, 0] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 z-0 overflow-hidden"
       >
-        <img
-          src={heroImg}
-          alt="Hero Background"
-          className="w-full h-full object-cover opacity-40"
+        <img 
+          src={heroImg} 
+          alt="Hero Background" 
+          className="w-full h-full object-cover opacity-50 scale-110" 
         />
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#0c0500]/70 via-[#0c0500]/50 to-[#0c0500]/30" />
       </motion.div>
 
-      {/* ── Sophisticated Overlays ── */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/60 via-black/20 to-[#0c0500]" />
-      <div className="absolute inset-0 z-[1] bg-radial-gradient from-transparent via-black/10 to-black/40" />
+      {/* 2. Dynamic Ambient Lighting */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/20 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* ── Animated Sparkles ── */}
-      {sparkles.map((s, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [0, 1.2, 0],
-            rotate: [0, 180]
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            delay: s.delay,
-            ease: "easeInOut"
-          }}
-          style={{ top: s.top, left: s.left }}
-          className={`absolute z-[2] pointer-events-none text-amber-400/60 ${s.size}`}
+      {/* 3. The Content Grid */}
+      <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+        
+        {/* Left Column: Typography */}
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="flex flex-col space-y-4"
         >
-          {i % 2 === 0 ? "✦" : "★"}
-        </motion.span>
-      ))}
-
-      {/* ── Main Content Container ── */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 pt-35 pb-20 text-center">
-
-        {/* Animated Headline Group */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <h1 className="font-serif text-[clamp(2.5rem,3vw,5rem)] font-black text-white leading-tight mb-2 drop-shadow-lg">
-            Latest Govt Jobs Notifications 2026
-          </h1>
-
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="relative inline-block"
-          >
-            <h1 className="font-serif text-[clamp(2.8rem,7vw,5.5rem)] font-black leading-none mb-0 bg-gradient-to-r from-white via-amber-200 to-amber-500 bg-clip-text text-transparent">
-              Personalized Alerts For You
+          <div className="space-y-4">
+            <motion.span 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="inline-block px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-bold tracking-[0.2em] uppercase"
+            >
+              Certified Updates • 2026
+            </motion.span>
+            
+            <h1 className="text-[clamp(2.5rem,5vw,4rem)] font-black text-white leading-[1.05] tracking-tight">
+              Latest Govt Jobs Notifications 2026 
+             
             </h1>
-            {/* Underline decoration */}
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ delay: 1, duration: 1 }}
-              className="h-1.5 bg-amber-500/50 rounded-full blur-[1px]"
-            />
-          </motion.div>
-        </motion.div>
+            <h2 className="text-[clamp(2.5rem,3vw,4rem)] font-black text-white leading-[1.05] tracking-tight">
+              <span className="bg-gradient-to-r from-amber-200 via-amber-500 to-orange-600 bg-clip-text text-transparent drop-shadow-[0_10px_10px_rgba(245,158,11,0.2)]">
+                Personalized Alerts For You
+              </span>
+            </h2>
+          </div>
 
-        {/* Subtitle */}
-        <motion.p
+          {/* <p className="text-slate-300 text-lg md:text-xl max-w-xl leading-relaxed font-light">
+            Don't just search for a career. Let your future <span className="text-white font-medium italic underline decoration-amber-500/50 underline-offset-4">find you first</span> with AI-powered alerts tailored to your location and expertise.
+          </p> */}
+
+           <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="text-amber-50/90 text-[clamp(1rem,2.5vw,1.25rem)] max-w-4xl mx-auto my-6 font-medium leading-relaxed"
+          className="text-amber-50/90 text-[clamp(1rem,2.5vw,1.25rem)] max-w-4xl mx-auto font-normal leading-relaxed"
         >
           Your one-stop destination for the latest government job updates, with
 
@@ -121,46 +106,88 @@ export default function HeroSection() {
           at your fingertips, curated based on your profile, interests, and location.
         </motion.p>
 
-        {/* CTA Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16"
-        >
-          <Link
-            to="/latest-govt-jobs"
-            className="group relative flex items-center gap-3 px-10 py-5 rounded-full bg-orange-600 text-white font-bold text-lg overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-900/20"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            <span>Let Every Update Find You First.</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-5 pt-2">
+            <Link to="#" className="relative group px-5 py-5 rounded-2xl bg-amber-500 text-[#ffffff] font-black text-lg transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_-15px_rgba(245,158,11,0.5)]">
+              Let Every Update Find You First.
+              <div className="absolute inset-0 rounded-2xl border-2 border-white/30 scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all" />
+            </Link>
 
-          <Link
-            to="/state-jobs"
-            className="px-10 py-5 rounded-full backdrop-blur-md bg-white/5 border border-white/20 text-white font-bold text-lg hover:bg-white/10 transition-all active:scale-95"
-          >
-            Browse Latest Jobs
-          </Link>
+
+            <Link to="#" className="px-5 py-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md text-white font-bold text-lg hover:bg-white/10 transition-all">
+              Browse Latest Jobs
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap gap-4 pt-4">
+            {trust.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-slate-200">
+                {item}
+              </div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Trust Badges */}
-        <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 ">
-          {trust.map((b, i) => (
-            <span
+        {/* Right Column: Interactive Graphic */}
+        <div className="relative h-[500px] lg:h-[700px] flex items-center justify-center">
+          
+          {/* Main Core Node */}
+          <motion.div 
+            style={{ 
+              x: 'calc(var(--mouse-x) * 0.5)', 
+              y: 'calc(var(--mouse-y) * 0.5)' 
+            }}
+            className="relative z-30 group"
+          >
+            <div className="relative w-full h-full lg:w-66 lg:h-66 rounded-full bg-white flex flex-col items-center justify-center p-1 shadow-[0_0_80px_rgba(245,158,11,0.3)]">
+              {/* Pulsing Core Glow */}
+              {/* <div className="absolute inset-[-15px] rounded-full border border-amber-500/20 animate-ping opacity-20" />
+              <div className="absolute inset-0 rounded-full border-[10px] border-[#0c0500] z-10" />
+              <div className="absolute inset-[-4px] rounded-full border-2 border-amber-500/50 animate-hero-slow" />
+              
+              <FaBalanceScale className="text-6xl text-slate-800 mb-4 transition-transform group-hover:scale-110 duration-500" />
+              <h2 className="text-3xl font-black text-slate-900 tracking-tighter text-center leading-none uppercase">
+                Core <br /> Services
+              </h2>
+              <div className="mt-4 h-1 w-12 bg-amber-500 rounded-full" />
+            </div> */}
+            <img src={center} alt="Center Graphic" className="w-full h-full lg:w-80 lg:h-80 object-cover rounded-full shadow-[0_0_80px_rgba(245,158,11,0.3)]" />
+            </div>
+          </motion.div>
+
+          {/* Floating Category Nodes */}
+          {governmentNodes.map((node, i) => (
+            <motion.div
               key={i}
-              className="text-amber-50/90 text-sm font-semibold  bg-amber-500 p-1 px-2 rounded-2xl  tracking-widest uppercase"
-              style={{ animationDelay: `${i * 0.15}s` }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + (i * 0.1) }}
+              style={{ 
+                x: `calc(var(--mouse-x) * ${node.speed * 0.05})`, 
+                y: `calc(var(--mouse-y) * ${node.speed * 0.05})` 
+              }}
+              className={`absolute ${node.pos} ${node.size} rounded-full border-2 ${node.color} hero-glass-morph shadow-2xl flex items-center justify-center z-40 cursor-pointer group`}
             >
-              {b}
-            </span>
+              <div className="text-3xl text-slate-100 group-hover:scale-110 transition-transform">
+                {node.icon}
+              </div>
+              <div className="absolute -bottom-8 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                 <span className="text-[10px] font-bold tracking-widest text-amber-400 uppercase bg-[#0c0500] px-2 py-1 rounded border border-amber-500/30">
+                  {node.label}
+                 </span>
+              </div>
+            </motion.div>
           ))}
+
+          {/* Orbit Rings Overlay */}
+          <div className="absolute inset-0 pointer-events-none opacity-20">
+            <div className="absolute inset-0 border border-slate-500/30 rounded-full animate-hero-slow scale-[1.2]" />
+            <div className="absolute inset-0 border border-dashed border-amber-500/20 rounded-full animate-hero-reverse scale-[0.8]" />
+          </div>
         </div>
       </div>
 
-      {/* Decorative Bottom Glow */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[30vh] bg-gradient-to-t from-amber-900/20 to-transparent blur-3xl pointer-events-none" />
+      {/* 4. Bottom Fade */}
+      <div className="absolute bottom-0 w-full h-40 bg-gradient-to-t from-[#0c0500] to-transparent z-10" />
     </section>
   );
 }

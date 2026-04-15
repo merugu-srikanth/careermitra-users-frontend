@@ -518,7 +518,7 @@ const JobsPanel = () => {
       <h3 className="font-bold text-gray-800 text-lg">Complete Your Profile First</h3>
       <p className="text-gray-500 text-sm max-w-xs">Add education details to unlock personalized job matches.</p>
       <button
-        onClick={() => navigate("/UserFormFillingFile")}
+        onClick={() => navigate("/user-profile-filling")}
         className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2"
       >
         Complete Profile <FaChevronRight size={10} />
@@ -1120,7 +1120,7 @@ const UserProfile = () => {
   useEffect(() => {
     if (loading || !profile) return;
     if (isEmpty((profile.education || {}).qualification_level)) {
-      const t = setTimeout(() => navigate("/UserFormFillingFile"), 120000);
+      const t = setTimeout(() => navigate("/user-profile-filling"), 120000);
       return () => clearTimeout(t);
     }
   }, [loading, profile, navigate]);
@@ -1261,7 +1261,7 @@ const UserProfile = () => {
               <span className="text-xs font-black text-gray-600">{profileCompletion}%</span>
             </div>
             {profileCompletion === 100 && (
-              <button onClick={() => navigate("/UserFormFillingFile")}
+              <button onClick={() => navigate("/user-profile-filling")}
                 className="flex items-center gap-2 px-4 py-2 bg-[#1e2a4a] hover:bg-[#263660] text-white rounded-xl text-xs font-bold transition-colors">
                 <FaEdit size={11} /> Edit Profile
               </button>
@@ -1296,7 +1296,7 @@ const UserProfile = () => {
                   <p className="text-xs text-gray-500">Add education details to get personalised job matches</p>
                 </div>
               </div>
-              <button onClick={() => navigate("/UserFormFillingFile")}
+              <button onClick={() => navigate("/user-profile-filling")}
                 className="shrink-0 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors">
                 Complete <FaChevronRight size={9} />
               </button>
@@ -1377,7 +1377,7 @@ const UserProfile = () => {
                   <span className="font-bold text-gray-800">Account Settings</span>
                 </div>
                 <div className="p-4 space-y-2">
-                  <button onClick={() => navigate("/UserFormFillingFile")}
+                  <button onClick={() => navigate("/user-profile-filling")}
                     className="w-full flex items-center justify-between px-4 py-4 rounded-2xl border border-gray-100 hover:border-orange-200 hover:bg-orange-50 transition-all group">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">

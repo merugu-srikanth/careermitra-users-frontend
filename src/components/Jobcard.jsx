@@ -60,7 +60,8 @@ export default function JobCard({ title, org, lastDate, location, slug, descript
             <CalIcon />
             <span style={{ fontWeight: 700, color: "#ea580c" }}>Deadline: {lastDate}</span>
           </div>
-          <Link to={`/jobs/${slug}`} style={{
+          {/* <Link to={`/jobs/${slug}`} style={{ */}
+          <Link to="#" style={{
             padding: "7px 16px", background: "#f97316", color: "#fff",
             borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: "none",
             transition: "all 0.3s",

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import loginImg from "../assets/bg-images/Login.png";
 import AnimatedBg from "../components/Animate";
+import { toast } from "react-toastify";
 
 export default function VerifyOtp() {
   const { verifyRegisterOtp, loading } = useAuth();
@@ -62,7 +63,7 @@ export default function VerifyOtp() {
       const res = await verifyRegisterOtp(email, otp);
       
       if (res?.status) {
-        alert("Account created successfully! 🎉");
+        toast.success("Account created successfully! 🎉");
         navigate("/login");
       } else {
         setError(res?.message || "Invalid OTP. Please try again.");
@@ -79,7 +80,7 @@ export default function VerifyOtp() {
     setCanResend(false);
     setOtp("");
     setError("");
-    alert("OTP resent successfully! 📧");
+    toast.success("OTP resent successfully! 📧");
   };
 
   const handleKeyPress = (e) => {

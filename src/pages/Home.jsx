@@ -5,6 +5,7 @@ import AnimatedSection from "../components/Animatedsection";
 import StudentCareerSession from "../components/Studentcareersession";
 import JobCategories from "../components/Jobcategories";
 import SEO from "../components/SEO";
+import GovernmentHero from "../components/GovernmentHero";
 // import HeroSection from "../components/HeroSection";
 // import JobCard from "../components/JobCard";
 // import AnimatedSection from "../components/AnimatedSection";
@@ -33,6 +34,10 @@ const states = [
   "Uttar Pradesh", "Madhya Pradesh", "Himachal Pradesh", "Arunachal Pradesh", "Chhattisgarh", "Maharashtra",
 ];
 
+const stateRows = Array.from({ length: 4 }, (_, rowIndex) =>
+  states.filter((_, index) => index % 4 === rowIndex)
+);
+
 const categories = [
   { name: "10th Pass Jobs", slug: "10th-pass" },
   { name: "12th Pass Jobs", slug: "12th-pass" },
@@ -40,6 +45,14 @@ const categories = [
   { name: "Engineering Jobs", slug: "engineering" },
   { name: "Bank Jobs", slug: "bank" },
   { name: "Defence Jobs", slug: "defence" },
+];
+
+const topJobCategories = [
+  "SSC Jobs 2026",
+  "Bank Jobs 2026",
+  "Railway Jobs 2026",
+  "Defence Jobs 2026",
+  "Police Jobs 2026",
 ];
 
 export default function Home() {
@@ -54,14 +67,19 @@ export default function Home() {
       />
 
       <HeroSection />
+      {/* <GovernmentHero /> */}
 
       {/* Latest Jobs */}
       <section style={{ padding: "96px 0", background: "#fff" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
           <AnimatedSection animation="fade-up">
             <div style={{ textAlign: "center", marginBottom: 64 }}>
-              <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#111827", marginBottom: 16 }}>
-                Latest <span style={{ color: "#f97316" }}>Govt Jobs</span>
+
+              <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, color: "#111827", marginBottom: 16, letterSpacing: "-1px" }}>
+                Latest{" "}
+                <span style={{ background: "linear-gradient(90deg, #f97316, #22c55e, #f97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  Govt Jobs
+                </span>
               </h2>
               <div style={{ width: 96, height: 6, background: "linear-gradient(90deg, #f97316, #22c55e)", borderRadius: 9999, margin: "0 auto 24px" }} />
               <p style={{ color: "#6b7280", maxWidth: 560, margin: "0 auto", fontSize: 17, fontWeight: 500 }}>
@@ -69,6 +87,26 @@ export default function Home() {
               </p>
             </div>
           </AnimatedSection>
+
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12, marginTop: -20, marginBottom: 40 }}>
+            {topJobCategories.map((category) => (
+              <span
+                key={category}
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: 9999,
+                  background: "#fff7ed",
+                  border: "1px solid #fdba74",
+                  color: "#c2410c",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {category}
+              </span>
+            ))}
+          </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 32 }}>
             {dummyJobs.map((job, i) => (
@@ -81,7 +119,7 @@ export default function Home() {
           </div>
 
           <div style={{ marginTop: 64, textAlign: "center" }}>
-            <Link to="/latest-govt-jobs" style={{
+            <Link to="#" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               padding: "12px 32px", borderRadius: 9999,
               border: "2px solid #f97316", color: "#ea580c",
@@ -113,48 +151,57 @@ export default function Home() {
           </AnimatedSection>
         </div>
 
-        <div style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 24, padding: "8px 0" }}>
-          {/* Row 1 — scrolls left */}
-          <div style={{ display: "flex", gap: 16, animation: "scrollLeft 50s linear infinite", width: "max-content" }}
-            onMouseEnter={e => e.currentTarget.style.animationPlayState = "paused"}
-            onMouseLeave={e => e.currentTarget.style.animationPlayState = "running"}
-          >
-            {[...states, ...states].map((s, i) => (
-              <Link key={i} to={`/state-jobs/${s.toLowerCase().replace(/\s+/g, "-")}`}
-                style={{
-                  padding: "12px 24px", borderRadius: 16,
-                  background: "#fff", border: "1px solid #fed7aa",
-                  fontWeight: 700, color: "#374151", textDecoration: "none",
-                  whiteSpace: "nowrap", fontSize: 14, transition: "all 0.2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#f97316"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#f97316"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#374151"; e.currentTarget.style.borderColor = "#fed7aa"; }}
-              >
-                {s}
-              </Link>
-            ))}
-          </div>
+        <div style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 18, padding: "8px 0" }}>
+          {stateRows.map((row, rowIndex) => {
+            const isOrange = rowIndex % 2 === 0;
+            const borderColor = isOrange ? "#fed7aa" : "#bbf7d0";
+            const hoverColor = isOrange ? "#f97316" : "#16a34a";
 
-          {/* Row 2 — scrolls right */}
-          <div style={{ display: "flex", gap: 16, animation: "scrollRight 50s linear infinite", width: "max-content" }}
-            onMouseEnter={e => e.currentTarget.style.animationPlayState = "paused"}
-            onMouseLeave={e => e.currentTarget.style.animationPlayState = "running"}
-          >
-            {[...states].reverse().concat([...states].reverse()).map((s, i) => (
-              <Link key={i} to={`/state-jobs/${s.toLowerCase().replace(/\s+/g, "-")}`}
+            return (
+              <div
+                key={rowIndex}
                 style={{
-                  padding: "12px 24px", borderRadius: 16,
-                  background: "#fff", border: "1px solid #bbf7d0",
-                  fontWeight: 700, color: "#374151", textDecoration: "none",
-                  whiteSpace: "nowrap", fontSize: 14, transition: "all 0.2s",
+                  display: "flex",
+                  gap: 16,
+                  animation: `${isOrange ? "scrollLeft" : "scrollRight"} 45s linear infinite`,
+                  width: "max-content",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#16a34a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#16a34a"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#374151"; e.currentTarget.style.borderColor = "#bbf7d0"; }}
+                onMouseEnter={e => e.currentTarget.style.animationPlayState = "paused"}
+                onMouseLeave={e => e.currentTarget.style.animationPlayState = "running"}
               >
-                {s}
-              </Link>
-            ))}
-          </div>
+                {[...row, ...row].map((s, i) => (
+                  <Link
+                    key={`${s}-${rowIndex}-${i}`}
+                    to="#"
+                    style={{
+                      padding: "12px 24px",
+                      borderRadius: 16,
+                      background: "#fff",
+                      border: `1px solid ${borderColor}`,
+                      fontWeight: 700,
+                      color: "#374151",
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
+                      fontSize: 14,
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = hoverColor;
+                      e.currentTarget.style.color = "#fff";
+                      e.currentTarget.style.borderColor = hoverColor;
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = "#fff";
+                      e.currentTarget.style.color = "#374151";
+                      e.currentTarget.style.borderColor = borderColor;
+                    }}
+                  >
+                    {s}
+                  </Link>
+                ))}
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -163,7 +210,7 @@ export default function Home() {
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
           <AnimatedSection animation="fade-up">
             <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#111827", marginBottom: 8 }}>
-             Government Jobs by  <span style={{ color: "#f97316" }}>Qualification 2026</span>
+              Government Jobs by  <span style={{ color: "#f97316" }}>Qualification 2026</span>
             </h2>
             <p style={{ color: "#6b7280", fontSize: 17, marginBottom: 64 }}>
               Get job alerts tailored specifically to your qualification
@@ -173,7 +220,8 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
             {categories.map((cat, i) => (
               <AnimatedSection key={cat.slug} animation="fade-up" delay={i * 50}>
-                <Link to={`/qualification/${cat.slug}`}
+                {/* <Link to={`/qualification/${cat.slug}`} */}
+                <Link to="#"
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                     padding: 16, borderRadius: 20, background: "#fafafa",
@@ -232,7 +280,7 @@ export default function Home() {
                 Stay Updated With Every Government Job Notifications 2026
               </h2>
               <p style={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", opacity: 0.9, marginBottom: 40, maxWidth: 560, margin: "0 auto 40px" }}>
-A missed job opportunity hurts more than a rejection. It turns into lasting regret for thousands of students everyday, simply due to late updates. With CareerMitra, get timely personalized job updates directly to your mobile/email.
+                A missed job opportunity hurts more than a rejection. It turns into lasting regret for thousands of students everyday, simply due to late updates. With CareerMitra, get timely personalized job updates directly to your mobile/email.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
                 <a href="#" style={{
@@ -244,7 +292,7 @@ A missed job opportunity hurts more than a rejection. It turns into lasting regr
                   onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
-                   Subscribe for Free Job Alerts
+                  Subscribe for Free Job Alerts
                 </a>
                 <a href="#" style={{
                   padding: "16px 40px", background: "#3b82f6", color: "#fff",

@@ -71,6 +71,10 @@ const parseDate = (d) => { if (!d) return null; if (typeof d === "string" && /^\
 const fmtDate2 = (d) => { const dt = parseDate(d); if (!dt) return "—"; return dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); };
 const daysLeft = (d) => { const dt = parseDate(d); if (!dt) return null; return Math.ceil((dt - new Date()) / 86400000); };
 const safe = (v) => (v === null || v === undefined || v === "" ? "—" : v);
+const toDateOrNull = (d) => {
+  const dt = parseDate(d);
+  return dt && !isNaN(dt) ? dt : null;
+};
 
 /* ═══════════════ EDUCATION ═══════════════ */
 const flattenEducation = (edu) => {
@@ -470,7 +474,7 @@ const JobsPanel = ({ token }) => {
   const stats = useMemo(() => ({ total: jobs.length, active: jobs.filter(j => { const d = parseDate(j.application_deadline); return d && d >= today; }).length, expired: jobs.filter(j => { const d = parseDate(j.application_deadline); return d && d < today; }).length }), [jobs, today]);
 
   if (loading) return <div className="flex flex-col items-center py-20 gap-3"><div className="w-10 h-10 rounded-full border-4 border-orange-100 border-t-orange-500 animate-spin" /><p className="text-orange-400 text-sm">Finding eligible jobs…</p></div>;
-  if (profileRequired) return <div className="flex flex-col items-center py-20 gap-4 text-center"><div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center"><Ic.Gov className="w-8 h-8 text-orange-400" /></div><h3 className="font-bold text-slate-800">Complete Your Profile First</h3><p className="text-slate-500 text-sm max-w-xs">Add education details to unlock personalized job matches.</p><button onClick={() => navigate("/UserFormFillingFile")} className="px-5 py-2.5 bg-orange-500 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg shadow-orange-200">Complete Profile<Ic.ChevR className="w-3 h-3" /></button></div>;
+  if (profileRequired) return <div className="flex flex-col items-center py-20 gap-4 text-center"><div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center"><Ic.Gov className="w-8 h-8 text-orange-400" /></div><h3 className="font-bold text-slate-800">Complete Your Profile First</h3><p className="text-slate-500 text-sm max-w-xs">Add education details to unlock personalized job matches.</p><button onClick={() => navigate("/user-profile-filling")} className="px-5 py-2.5 bg-orange-500 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg shadow-orange-200">Complete Profile<Ic.ChevR className="w-3 h-3" /></button></div>;
   if (error) return <div className="flex flex-col items-center py-16 gap-3"><div className="w-14 h-14 bg-orange-50 rounded-full flex items-center justify-center"><Ic.Bag className="w-7 h-7 text-orange-400" /></div><p className="text-slate-600 font-medium">{error}</p></div>;
 
   return (
@@ -746,7 +750,7 @@ const SettingsPanel = ({ token, email, navigate, handleLogout }) => {
           </div>
           <div className="p-4 space-y-2">
             {[
-              { label: "Edit Profile", desc: "Update your personal & education info", icon: <Ic.Edit className="w-4 h-4" />, color: "bg-orange-100 text-orange-600", action: () => navigate("/UserFormFillingFile"), hover: "hover:bg-orange-50 hover:border-orange-200" },
+              { label: "Edit Profile", desc: "Update your personal & education info", icon: <Ic.Edit className="w-4 h-4" />, color: "bg-orange-100 text-orange-600", action: () => navigate("/user-profile-filling"), hover: "hover:bg-orange-50 hover:border-orange-200" },
               { label: "Reset Password", desc: "Change your account password", icon: <Ic.Lock className="w-4 h-4" />, color: "bg-blue-100 text-blue-600", action: () => setShowReset(true), hover: "hover:bg-blue-50 hover:border-blue-200" },
               { label: "Logout", desc: "Sign out of your account", icon: <Ic.Logout className="w-4 h-4" />, color: "bg-red-100 text-red-500", action: handleLogout, hover: "hover:bg-red-50 hover:border-red-200", chevHover: "group-hover:text-red-500" },
             ].map(item => (
@@ -779,6 +783,35 @@ const UserProfilePage = () => {
   const [age, setAge] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [jobsNavCount, setJobsNavCount] = useState({ total: 0, newCount: 0 });
+  const [annNavCount, setAnnNavCount] = useState({ total: 0, newCount: 0 });
+
+  const seenStorageKey = useMemo(() => {
+    const ident = profile?.id || profile?.email || user?.id || user?.email || "guest";
+    return `cm_dashboard_seen_${ident}`;
+  }, [profile?.id, profile?.email, user?.id, user?.email]);
+
+  const getSeenState = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(seenStorageKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }, [seenStorageKey]);
+
+  const markTabAsSeen = useCallback((tabId) => {
+    if (tabId !== "jobs" && tabId !== "announcements") return;
+    const key = tabId === "jobs" ? "jobs_seen_at" : "announcements_seen_at";
+    const next = { ...getSeenState(), [key]: new Date().toISOString() };
+    try {
+      localStorage.setItem(seenStorageKey, JSON.stringify(next));
+    } catch {
+      // Ignore storage write failures in private mode or restricted browsers.
+    }
+    if (tabId === "jobs") setJobsNavCount((prev) => ({ ...prev, newCount: 0 }));
+    if (tabId === "announcements") setAnnNavCount((prev) => ({ ...prev, newCount: 0 }));
+  }, [getSeenState, seenStorageKey]);
 
   useEffect(() => {
     if (!token) { setLoading(false); setError("Authentication required"); return; }
@@ -798,11 +831,60 @@ const UserProfilePage = () => {
     })();
   }, [token, logout]);
 
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const seen = getSeenState();
+        const jobsSeenAt = toDateOrNull(seen.jobs_seen_at);
+        const annSeenAt = toDateOrNull(seen.announcements_seen_at);
+
+        const [jobsRes, annRes] = await Promise.all([
+          axios.get(`${API_BASE}/job-posts-assigned/my-assigned`, {
+            headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+          }),
+          axios.get(`${API_BASE}/marketing-events/my-events`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const jobs = jobsRes?.data?.status === true
+          ? (jobsRes?.data?.assigned_job_posts?.data || [])
+          : [];
+        const activeEvents = annRes?.data?.status
+          ? (annRes?.data?.events || []).filter((e) => e?.is_active)
+          : [];
+
+        const jobsNewCount = jobs.filter((j) => {
+          const created = toDateOrNull(j?.posted_date || j?.created_at || j?.updated_at);
+          if (!created) return false;
+          return !jobsSeenAt || created > jobsSeenAt;
+        }).length;
+
+        const annNewCount = activeEvents.filter((e) => {
+          const created = toDateOrNull(e?.event_date || e?.created_at || e?.updated_at);
+          if (!created) return false;
+          return !annSeenAt || created > annSeenAt;
+        }).length;
+
+        setJobsNavCount({ total: jobs.length, newCount: activeTab === "jobs" ? 0 : jobsNewCount });
+        setAnnNavCount({ total: activeEvents.length, newCount: activeTab === "announcements" ? 0 : annNewCount });
+      } catch {
+        setJobsNavCount((prev) => ({ ...prev, total: prev.total || 0 }));
+        setAnnNavCount((prev) => ({ ...prev, total: prev.total || 0 }));
+      }
+    })();
+  }, [token, activeTab, getSeenState]);
+
+  useEffect(() => {
+    if (activeTab === "jobs" || activeTab === "announcements") markTabAsSeen(activeTab);
+  }, [activeTab, markTabAsSeen]);
+
   const profileCompletion = useMemo(() => { if (!profile) return 0; return !isEV((profile.education || {}).qualification_level) ? 100 : 0; }, [profile]);
 
   useEffect(() => {
     if (loading || !profile) return;
-    if (isEV((profile.education || {}).qualification_level)) { const t = setTimeout(() => navigate("/UserFormFillingFile"), 120000); return () => clearTimeout(t); }
+    if (isEV((profile.education || {}).qualification_level)) { const t = setTimeout(() => navigate("/user-profile-filling"), 120000); return () => clearTimeout(t); }
   }, [loading, profile, navigate]);
 
   const sections = useMemo(() => { if (!profile) return []; const c = { ...profile }; delete c.token; delete c.password; return buildSections(c, age); }, [profile, age]);
@@ -823,7 +905,9 @@ const UserProfilePage = () => {
         <p className="text-slate-500 text-sm mb-4">{error}</p>
         {error === "Authentication required" ? <a href="/signin" className="inline-block px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-200">Sign In</a> : <button onClick={() => window.location.reload()} className="px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-200">Try Again</button>}
       </div>
-    </div>
+    </div>     
+
+    
   );
   if (!profile) return null;
 
@@ -834,8 +918,8 @@ const UserProfilePage = () => {
 
   const NAV = [
     { id: "profile", label: "My Profile", icon: <Ic.User className="w-3.5 h-3.5" />, desc: "Info & education" },
-    { id: "jobs", label: "Job Posts", icon: <Ic.Gov className="w-3.5 h-3.5" />, desc: "Eligible govt jobs" },
-    { id: "announcements", label: "Announcements", icon: <Ic.Bell className="w-3.5 h-3.5" />, desc: "Events & alerts" },
+    { id: "jobs", label: "Job Posts", icon: <Ic.Gov className="w-3.5 h-3.5" />, desc: "Eligible govt jobs", count: jobsNavCount.total, newCount: jobsNavCount.newCount },
+    { id: "announcements", label: "Announcements", icon: <Ic.Bell className="w-3.5 h-3.5" />, desc: "Events & alerts", count: annNavCount.total, newCount: annNavCount.newCount },
     { id: "media", label: "Media", icon: <Ic.Img className="w-3.5 h-3.5" />, desc: "Uploaded documents" },
     { id: "settings", label: "Settings", icon: <Ic.Cog className="w-3.5 h-3.5" />, desc: "Account & security" },
   ];
@@ -866,7 +950,7 @@ const UserProfilePage = () => {
                 {profile.current_location && <span className="text-xs bg-white/15 text-white/90 px-2.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm"><Ic.Pin className="w-2.5 h-2.5" />{profile.current_location}</span>}
               </div>
             </div>
-            <div className="border border-2 border-amber-400  rounded-2xl p-2">{profileCompletion < 100 && <button onClick={() => navigate("/UserFormFillingFile")} className=" text-white font-bold flex items-center gap-1 hover:text-white transition-colors">Complete your profile<Ic.ChevR className="w-3 h-3" /></button>}
+            <div className="border border-2 border-amber-400  rounded-2xl p-2">{profileCompletion < 100 && <button onClick={() => navigate("/user-profile-filling")} className=" text-white font-bold flex items-center gap-1 hover:text-white transition-colors">Complete your profile<Ic.ChevR className="w-3 h-3" /></button>}
             </div>
 
             {profileCompletion === 100 && <button onClick={() => navigate("/user-profile-filling")} className="shrink-0 px-3 py-2 bg-white hover:bg-white/80 text-orange-500 hover:text-black rounded-xl text-xs font-bold backdrop-blur-sm transition-colors flex items-center gap-1.5 border border-white/20"><Ic.Edit className="w-3 h-3" />Edit Your Profile</button>}
@@ -880,7 +964,7 @@ const UserProfilePage = () => {
             <div className="h-2 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-white rounded-full transition-all duration-700 shadow-sm" style={{width:`${profileCompletion}%`}}/>
             </div>
-            {profileCompletion<100&&<button onClick={()=>navigate("/UserFormFillingFile")} className="mt-2 text-xs text-amber-200 font-bold flex items-center gap-1 hover:text-white transition-colors">Complete your profile<Ic.ChevR className="w-3 h-3"/></button>}
+            {profileCompletion<100&&<button onClick={()=>navigate("/user-profile-filling")} className="mt-2 text-xs text-amber-200 font-bold flex items-center gap-1 hover:text-white transition-colors">Complete your profile<Ic.ChevR className="w-3 h-3"/></button>}
           </div> */}
         </div>
       </div>
@@ -917,10 +1001,16 @@ const UserProfilePage = () => {
             {NAV.map(t => (
               <button key={t.id} onClick={() => setActiveTab(t.id)} className={cx("w-full text-left px-4 py-3 flex items-center gap-3 transition-all border-l-2", activeTab === t.id ? "bg-orange-50 border-orange-500" : "border-transparent hover:bg-orange-50/40 hover:border-orange-200")}>
                 <span className={activeTab === t.id ? "text-orange-500" : "text-slate-400"}>{t.icon}</span>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className={cx("text-xs font-bold leading-none", activeTab === t.id ? "text-orange-700" : "text-slate-700")}>{t.label}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">{t.desc}</p>
                 </div>
+                {typeof t.count === "number" && (
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cx("text-[10px] font-black px-2 py-0.5 rounded-full", activeTab === t.id ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-600")}>{t.count}</span>
+                    {t.newCount > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">{t.newCount} new</span>}
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -949,7 +1039,12 @@ const UserProfilePage = () => {
           <div className="md:hidden flex bg-white rounded-2xl border border-orange-100 shadow-sm p-1 gap-1 mb-4 overflow-x-auto">
             {NAV.map(t => (
               <button key={t.id} onClick={() => setActiveTab(t.id)} className={cx("flex-1 min-w-[56px] flex flex-col items-center py-2 px-1 rounded-xl text-[10px] font-bold transition-all gap-1", activeTab === t.id ? "bg-orange-500 text-white shadow-sm" : "text-slate-400 hover:bg-orange-50")}>
-                {t.icon}{t.label}
+                {t.icon}
+                <span>{t.label}</span>
+                {typeof t.count === "number" && (
+                  <span className={cx("text-[9px] px-1.5 py-0.5 rounded-full font-black", activeTab === t.id ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600")}>{t.count}</span>
+                )}
+                {t.newCount > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black bg-red-500 text-white">+{t.newCount}</span>}
               </button>
             ))}
           </div>
@@ -961,7 +1056,7 @@ const UserProfilePage = () => {
                 <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center text-amber-500 shrink-0"><Ic.Alert className="w-4 h-4" /></div>
                 <div><p className="font-bold text-slate-800 text-sm">Profile Incomplete</p><p className="text-xs text-slate-500">Add education details to unlock personalized job matches</p></div>
               </div>
-              <button onClick={() => navigate("/UserFormFillingFile")} className="shrink-0 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shadow-orange-200">Complete<Ic.ChevR className="w-3 h-3" /></button>
+              <button onClick={() => navigate("/user-profile-filling")} className="shrink-0 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shadow-orange-200">Complete<Ic.ChevR className="w-3 h-3" /></button>
             </div>
           )}
 

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import loginImg from "../assets/bg-images/Login.png";
 import { Link, useNavigate } from "react-router-dom";
 import AnimatedBg from "../components/Animate";
+import { toast } from "react-toastify";
 
 export default function Register() {
   const { register, verifyRegisterOtp, loading } = useAuth();
@@ -16,6 +17,8 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [jobType, setJobType] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
   
@@ -109,7 +112,7 @@ export default function Register() {
       const res = await verifyRegisterOtp(registeredEmail, otpString);
       
       if (res?.status) {
-        alert("Account created successfully! 🎉 Please login.");
+        toast.success("Account created successfully! 🎉 Please login.");
         navigate("/login");
       } else {
         setOtpError(res?.message || "Invalid OTP. Please try again.");
@@ -138,7 +141,7 @@ export default function Register() {
     try {
       const res = await register(registrationData);
       if (res?.status) {
-        alert("OTP resent successfully! 📧");
+        toast.success("OTP resent successfully! 📧");
       } else {
         setOtpError(res?.message || "Failed to resend OTP");
       }
@@ -281,24 +284,60 @@ export default function Register() {
           
 
           {/* Password */}
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full py-2 px-3 border rounded-xl mb-3 focus:ring-2 focus:ring-orange-400 focus:outline-none focus:border-orange-400 transition"
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={handleKeyPress}
-            value={password}
-          />
+          <div className="relative mb-3">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              className="w-full py-2 px-3 pr-10 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:outline-none focus:border-orange-400 transition"
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              value={password}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Confirm Password */}
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            className="w-full py-2 px-3 border rounded-xl mb-4 focus:ring-2 focus:ring-orange-400 focus:outline-none focus:border-orange-400 transition"
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            onKeyPress={handleKeyPress}
-            value={confirmPassword}
-          />
+          <div className="relative mb-4">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm Password"
+              className="w-full py-2 px-3 pr-10 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:outline-none focus:border-orange-400 transition"
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              value={confirmPassword}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showConfirmPassword ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Radio Options - Card Style */}
           {/* <div className="space-y-4 mb-6">
@@ -408,7 +447,7 @@ export default function Register() {
 
       {/* OTP Modal Overlay */}
       {showOtpModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-8 relative animate-fadeIn">
             {/* Close button */}
             <button
