@@ -60,11 +60,12 @@ const team = [
 ];
 
 const timeline = [
-  { year: "2020", title: "The Idea", desc: "Retired officials recognize the gap — thousands of rural youth missing out on government career opportunities.", icon: "💡" },
-  { year: "2022", title: "Planning Phase", desc: "Team assembled, research conducted across Tier-2 cities in Telangana to understand the real challenges aspirants face.", icon: "📋" },
-  { year: "2023", title: "Platform Launch", desc: "Career Mitra officially launched with SMS & email outreach, serving its first batch of 100+ aspirants.", icon: "🚀" },
-  { year: "2024", title: "Growing Strong", desc: "Expanded network to multiple districts, added technical consultants and regional coordinators across Telangana.", icon: "🌱" },
-  { year: "2025+", title: "Pan-India Vision", desc: "Scaling to serve aspirants across every state in India with a full digital platform and mentorship network.", icon: "🇮🇳" },
+  { year: "2022", title: "The Idea", desc: "Retired officials recognize the gap — thousands of rural youth missing out on government career opportunities.", icon: "💡" },
+  { year: "2023", title: "Planning Phase", desc: "Team assembled, research conducted across Tier-2 cities in Telangana to understand the real challenges aspirants face.", icon: "📋" },
+  { year: "2025", title: "Growing Strong", desc: "Expanded network to multiple districts, added technical consultants and regional coordinators across Telangana.", icon: "🌱" },
+    { year: "2026", title: "Platform Launch", desc: "Career Mitra officially launched with SMS & email outreach, serving its first batch of 100+ aspirants.", icon: "🚀" },
+  { year: "2026+", title: "Pan-India Vision", desc: "Scaling to serve aspirants across every state in India with a full digital platform and mentorship network.", icon: "🇮🇳" },
+  
 ];
 
 const floatingIcons = [
@@ -162,7 +163,7 @@ function AboutHero() {
         </motion.h1>
 
         <motion.p variants={fadeUp} className="text-gray-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
-          Career Mitra was born from a simple belief — every young aspirant in India, regardless of their background or location, deserves access to the same quality career guidance that was once reserved for the privileged few.
+          Career Mitra was born from a simple belief that every young aspirant in India, <br />  regardless of their background or location, deserves access to the same quality career guidance that was once reserved for the privileged few.
         </motion.p>
 
         {/* quote card */}
@@ -173,7 +174,7 @@ function AboutHero() {
         >
           <FaQuoteLeft className="text-orange-300 mb-3 mx-auto" size={28} />
           <p className="text-gray-700 font-medium text-base md:text-lg italic leading-relaxed">
-            "We spent 30 years serving the government. Now we serve the youth who will shape it."
+            "We spent 30 + years serving the government. Now we serve the youth who will shape it."
           </p>
           <p className="text-orange-500 font-semibold text-sm mt-3">— Founding Team, Career Mitra</p>
         </motion.div>
@@ -240,7 +241,7 @@ function VisionSection() {
                 <HiSparkles size={32} className="mb-4 opacity-80" />
                 <h3 className="text-2xl font-black mb-4 leading-tight">The Gap We're Filling</h3>
                 <p className="text-orange-100 leading-relaxed text-sm">
-                  Today's focus on corporate jobs and campus placements leaves behind millions of students — especially those from Tier-2 cities and rural areas — for whom such paths are either inaccessible or misaligned with their real aspirations.
+                  Today's focus on corporate jobs and campus placements leaves behind millions of students  especially those from Tier-2 cities and rural areas for whom such paths are either inaccessible or misaligned with their real aspirations.
                 </p>
                 <div className="mt-6 pt-6 border-t border-orange-400">
                   <p className="text-orange-100 text-sm leading-relaxed">
@@ -255,7 +256,7 @@ function VisionSection() {
             {[
               { title: "Government & Allied Sectors", desc: "PSC, UPSC, Banking, Railways, Defence and more — stable careers that offer purpose alongside income.", icon: "🏛️" },
               { title: "Tier-2 & Rural Focus", desc: "We specifically reach out to aspirants from smaller cities and villages who lack access to quality guidance.", icon: "🗺️" },
-              { title: "Beyond Campus Placements", desc: "For students who don't fit the corporate mold — we provide a genuine, respected alternative path.", icon: "🎯" },
+              { title: "Beyond Campus Placements", desc: "For students who don't fit the corporate mold we provide a genuine, respected alternative path.", icon: "🎯" },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -521,7 +522,7 @@ function CTASection() {
         </motion.div>
 
         <motion.p variants={fadeUp} className="text-gray-400 text-sm">
-          Based in <span className="font-semibold text-gray-600">Telangana , Andrapradesh , Maharastra, Karnataka</span> · Serving aspirants{" "}
+          Based in <span className="font-semibold text-gray-600">Telangana , Andhra Pradesh , Maharashtra, Karnataka</span> · Serving aspirants{" "}
           <span className="font-semibold text-green-600">Pan-India</span>
         </motion.p>
       </motion.div>

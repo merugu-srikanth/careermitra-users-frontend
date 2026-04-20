@@ -1157,7 +1157,7 @@ export default function Userprofilefillingpage({ onClose }) {
         title="User Profile Filling | Career Mitra"
         description="Complete your user profile to get personalized job recommendations and access exclusive career resources."
         keywords="user profile, job recommendations, career resources, personalized dashboard"
-        url="https://www.sootradhara.in/user-profile-filling"
+        url="https://www.careermitra.in/user-profile-filling"
       />
       {showConfetti && (
         <Confetti

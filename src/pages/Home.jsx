@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import HeroSection from "../components/Herosection";
 import JobCard from "../components/Jobcard";
 import AnimatedSection from "../components/Animatedsection";
@@ -6,11 +7,14 @@ import StudentCareerSession from "../components/Studentcareersession";
 import JobCategories from "../components/Jobcategories";
 import SEO from "../components/SEO";
 import GovernmentHero from "../components/GovernmentHero";
+import { STATIC_JOBS } from "./Staticjobs";
 // import HeroSection from "../components/HeroSection";
 // import JobCard from "../components/JobCard";
 // import AnimatedSection from "../components/AnimatedSection";
 // import StudentCareerSession from "../components/StudentCareerSession";
 // import JobCategories from "../components/JobCategories";
+import { motion } from "framer-motion";
+import InternshipTable from "./InternshipTable";
 
 const ArrowRightIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -18,14 +22,10 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-const dummyJobs = [
-  { title: "AP Police Constable 2026", org: "AP Police", lastDate: "20 Jan 2026", location: "Andhra Pradesh", slug: "ap-police-constable-recruitment-2026", description: "Andhra Pradesh Police invites applications for Constable posts. Candidates must meet physical standards and eligibility criteria. A great opportunity for defense aspirants." },
-  { title: "Railway RRB NTPC Notification", org: "Indian Railways", lastDate: "15 Feb 2026", location: "All India", slug: "railway-jobs-2026-notification", description: "Railway Recruitment Board (RRB) NTPC exam for clerk, typist, and station master roles. Open to graduates across India with attractive salary and job security." },
-  { title: "SBI Probationary Officer (PO)", org: "State Bank of India", lastDate: "10 Mar 2026", location: "All India", slug: "sbi-po-2026", description: "State Bank of India recruits Probationary Officers. Candidates with graduation can apply. Offers high salary, career growth, and banking sector exposure." },
-  { title: "TSPSC Group 2 Services", org: "Telangana PSC", lastDate: "05 Feb 2026", location: "Telangana", slug: "tspsc-group-2", description: "Telangana Public Service Commission Group 2 recruitment for administrative roles. Ideal for graduates seeking government jobs in Telangana state." },
-  { title: "SSC CGL Examination 2026", org: "Staff Selection Commission", lastDate: "28 Feb 2026", location: "All India", slug: "ssc-cgl-2026", description: "SSC Combined Graduate Level exam for central government jobs. Includes posts in ministries, departments, and organizations across India." },
-  { title: "UPSC Civil Services Prelims", org: "UPSC", lastDate: "25 Mar 2026", location: "All India", slug: "upsc-civil-services-2026", description: "UPSC Civil Services exam for IAS, IPS, IFS and other top government roles. One of the most prestigious exams in India for graduates." },
-];
+const latestJobs = [...STATIC_JOBS]
+  .filter((job) => job.status === 0)
+  .sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate))
+  .slice(0, 6);
 
 const states = [
   "Goa", "Delhi", "Sikkim", "Assam", "Bihar", "Punjab", "Odisha", "Telangana", "Andhra Pradesh",
@@ -56,91 +56,250 @@ const topJobCategories = [
 ];
 
 export default function Home() {
+  const { token } = useAuth();
+
   return (
-    <div style={{ overflow: "hidden" }}>
+    <div style={{ overflow: "hidden", fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}>
 
       <SEO
         title="Latest Govt Jobs 2026 | Career Mitra"
         description="Find latest government jobs, internships, and private jobs in India. Apply now with Career Mitra."
         keywords="govt jobs 2026, jobs in India, internships, freshers jobs"
-        url="https://www.sootradhara.in/"
+        url="https://www.careermitra.in/"
       />
 
-      <HeroSection />
-      {/* <GovernmentHero /> */}
+      {/* <HeroSection /> */}
+      <GovernmentHero />
 
       {/* Latest Jobs */}
-      <section style={{ padding: "96px 0", background: "#fff" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
-          <AnimatedSection animation="fade-up">
-            <div style={{ textAlign: "center", marginBottom: 64 }}>
+      <section id="internship" style={{ padding: "50px 0 56px", background: "#fafaf9", position: "relative", overflow: "hidden" }}>
 
-              <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, color: "#111827", marginBottom: 16, letterSpacing: "-1px" }}>
+        {/* Decorative background blobs */}
+        <div style={{
+          position: "absolute", top: -120, right: -120, width: 500, height: 500,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(249,115,22,0.07) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", bottom: -80, left: -80, width: 400, height: 400,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(34,197,94,0.07) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ padding: "0 60px" }}>
+          <AnimatedSection animation="fade-up">
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+
+              {/* Eyebrow badge */}
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "6px 10px", borderRadius: 9999,
+                  background: "linear-gradient(135deg, #fff7ed, #fef3c7)",
+                  border: "1px solid #fed7aa",
+                  marginBottom: 10,
+                }}
+              >
+                <span style={{ fontSize: 16 }}>🔥</span>
+                <span style={{ color: "#c2410c", fontWeight: 700, fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  Freshly Updated
+                </span>
+              </motion.div>
+
+              <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, color: "#111827", marginBottom: 3, letterSpacing: "-1px", lineHeight: 1.1 }}>
                 Latest{" "}
-                <span style={{ background: "linear-gradient(90deg, #f97316, #22c55e, #f97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                <span style={{ background: "linear-gradient(90deg, #f97316, #22c55e, #f97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundSize: "200% auto", animation: "textShimmer 4s linear infinite" }}>
                   Govt Jobs
                 </span>
               </h2>
-              <div style={{ width: 96, height: 6, background: "linear-gradient(90deg, #f97316, #22c55e)", borderRadius: 9999, margin: "0 auto 24px" }} />
-              <p style={{ color: "#6b7280", maxWidth: 560, margin: "0 auto", fontSize: 17, fontWeight: 500 }}>
+
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 1.4, duration: 0.9, ease: "easeOut" }}
+                className="origin-left h-0.75 rounded-full w-80 mx-auto mb-3"
+                style={{
+                  background: "linear-gradient(90deg, transparent, #fbbf24, #f59e0b, #fbbf24, transparent)",
+                  boxShadow: "0 0 12px rgba(251,191,36,0.7)",
+                  height: 3,
+                  width: 220,
+                  margin: "14px auto 18px",
+                  borderRadius: 99,
+                }}
+              />
+
+              <p style={{ color: "#6b7280", maxWidth: 560, margin: "0 auto", fontSize: 17, fontWeight: 500, lineHeight: 1.7 }}>
                 Recently announced opportunities across various sectors in India.
               </p>
             </div>
           </AnimatedSection>
 
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12, marginTop: -20, marginBottom: 40 }}>
-            {topJobCategories.map((category) => (
-              <span
-                key={category}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 9999,
-                  background: "#fff7ed",
-                  border: "1px solid #fdba74",
-                  color: "#c2410c",
-                  fontWeight: 800,
-                  fontSize: 14,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {category}
-              </span>
-            ))}
-          </div>
+        
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 32 }}>
-            {dummyJobs.map((job, i) => (
-              <AnimatedSection key={job.slug} animation="fade-up" delay={i * 60}>
-                <div style={{ height: "100%" }}>
-                  <JobCard {...job} />
-                </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 28 }}>
+            {latestJobs.map((job, i) => (
+              <AnimatedSection key={job.id} animation="fade-up" delay={i * 80}>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.5, ease: "easeOut" }}
+                  whileHover={{ y: -6, transition: { duration: 0.25 } }}
+                  style={{ height: "100%" }}
+                >
+                  <JobCard
+                    title={job.title}
+                    org={job.org}
+                    lastDate={job.lastDate}
+                    location={job.location}
+                    applyLink={job.applyLink}
+                    noOfPosts={job.noOfPosts}
+                    age={job.age}
+                    qualifications={job.qualifications}
+                    category={job.category}
+                  />
+                </motion.div>
               </AnimatedSection>
             ))}
           </div>
 
-          <div style={{ marginTop: 64, textAlign: "center" }}>
-            <Link to="#" style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "12px 32px", borderRadius: 9999,
-              border: "2px solid #f97316", color: "#ea580c",
-              fontWeight: 800, textDecoration: "none",
-              transition: "all 0.3s",
-              fontSize: 15,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#f97316"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ea580c"; }}
-            >
-              View All Opportunities <ArrowRightIcon />
-            </Link>
+          <div style={{ marginTop: 72, textAlign: "center" }}>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: "inline-block" }}>
+              <Link to={token ? "/jobs" : "/login"} style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                padding: "14px 40px", borderRadius: 9999,
+                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                color: "#fff",
+                fontWeight: 800, textDecoration: "none",
+                fontSize: 15,
+                boxShadow: "0 8px 28px rgba(249,115,22,0.38)",
+                letterSpacing: "0.01em",
+                transition: "box-shadow 0.3s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 36px rgba(249,115,22,0.55)"; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 8px 28px rgba(249,115,22,0.38)"; }}
+              >
+                View All Opportunities <ArrowRightIcon />
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      <StudentCareerSession />
+
+
+
+
+
+
+
+
+
+
+
+      {/* InternshipTable Jobs */}
+      <section style={{ padding: "50px 0 56px", background: "#fafaf9", position: "relative", overflow: "hidden" }}>
+
+        {/* Decorative background blobs */}
+        <div style={{
+          position: "absolute", top: -120, right: -120, width: 500, height: 500,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(249,115,22,0.07) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", bottom: -80, left: -80, width: 400, height: 400,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(34,197,94,0.07) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ padding: "0 60px" }}>
+          <AnimatedSection animation="fade-up">
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+
+              {/* Eyebrow badge */}
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "6px 10px", borderRadius: 9999,
+                  background: "linear-gradient(135deg, #fff7ed, #fef3c7)",
+                  border: "1px solid #fed7aa",
+                  marginBottom: 10,
+                }}
+              >
+                <span style={{ fontSize: 16 }}>🔥</span>
+                <span style={{ color: "#c2410c", fontWeight: 700, fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  Latest Updated
+                </span>
+              </motion.div>
+
+              <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, color: "#111827", marginBottom: 3, letterSpacing: "-1px", lineHeight: 1.1 }}>
+                Internship{" "}
+                <span style={{ background: "linear-gradient(90deg, #f97316, #22c55e, #f97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundSize: "200% auto", animation: "textShimmer 4s linear infinite" }}>
+                   Opportunities
+                </span>
+              </h2>
+
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 1.4, duration: 0.9, ease: "easeOut" }}
+                className="origin-left h-0.75 rounded-full w-80 mx-auto mb-3"
+                style={{
+                  background: "linear-gradient(90deg, transparent, #fbbf24, #f59e0b, #fbbf24, transparent)",
+                  boxShadow: "0 0 12px rgba(251,191,36,0.7)",
+                  height: 3,
+                  width: 220,
+                  margin: "14px auto 18px",
+                  borderRadius: 99,
+                }}
+              />
+
+              <p style={{ color: "#6b7280", maxWidth: 620, margin: "0 auto", fontSize: 17, fontWeight: 500, lineHeight: 1.7 }}>
+                Recently announced Internship opportunities across various sectors in India.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <InternshipTable />
+
+
+          {/* <div style={{ marginTop: 51, textAlign: "center" }}>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: "inline-block" }}>
+              <Link to={token ? "/jobs" : "/login"} style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                padding: "14px 40px", borderRadius: 9999,
+                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                color: "#fff",
+                fontWeight: 800, textDecoration: "none",
+                fontSize: 15,
+                boxShadow: "0 8px 28px rgba(249,115,22,0.38)",
+                letterSpacing: "0.01em",
+                transition: "box-shadow 0.3s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 36px rgba(249,115,22,0.55)"; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 8px 28px rgba(249,115,22,0.38)"; }}
+              >
+                View All Opportunities <ArrowRightIcon />
+              </Link>
+            </motion.div>
+          </div> */}
+        </div>
+      </section>
+
+      {/* <StudentCareerSession /> */}
 
       {/* States Moving */}
-      <section style={{ padding: "96px 0", background: "rgba(255,247,237,0.5)" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px 0", textAlign: "center" }}>
+      {/* <section style={{ padding: "96px 0", background: "rgba(255,247,237,0.5)" }}>
+        <div style={{ padding: "0 60px 0", textAlign: "center" }}>
           <AnimatedSection animation="fade-up">
             <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#111827", marginBottom: 8 }}>
               Explore by <span style={{ color: "#f97316" }}>State</span>
@@ -172,7 +331,7 @@ export default function Home() {
                 {[...row, ...row].map((s, i) => (
                   <Link
                     key={`${s}-${rowIndex}-${i}`}
-                    to="#"
+                    to="/coming-soon"
                     style={{
                       padding: "12px 24px",
                       borderRadius: 16,
@@ -203,11 +362,11 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+      </section> */}
 
       {/* Categories */}
-      <section style={{ padding: "96px 0", background: "#fff" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
+      {/* <section style={{ padding: "96px 0", background: "#fff" }}>
+        <div style={{ padding: "0 60px", textAlign: "center" }}>
           <AnimatedSection animation="fade-up">
             <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#111827", marginBottom: 8 }}>
               Government Jobs by  <span style={{ color: "#f97316" }}>Qualification 2026</span>
@@ -220,7 +379,6 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
             {categories.map((cat, i) => (
               <AnimatedSection key={cat.slug} animation="fade-up" delay={i * 50}>
-                {/* <Link to={`/qualification/${cat.slug}`} */}
                 <Link to="#"
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -260,41 +418,103 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <JobCategories />
 
       {/* CTA Section */}
-      <section style={{ padding: "80px 24px" }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto", borderRadius: 48, overflow: "hidden", position: "relative", boxShadow: "0 20px 60px rgba(249,115,22,0.4)" }}>
+      <section style={{ padding: "50px 60px" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          style={{
+            borderRadius: 48,
+            overflow: "hidden",
+            position: "relative",
+            boxShadow: "0 32px 80px rgba(249,115,22,0.35), 0 0 0 1px rgba(249,115,22,0.1)",
+          }}
+        >
+          {/* Animated gradient background */}
           <div style={{
             position: "absolute", inset: 0,
-            background: "linear-gradient(90deg, #ea580c, #16a34a)",
-            backgroundSize: "200% auto",
-            animation: "gradientShift 3s ease infinite",
+            background: "linear-gradient(135deg, #ea580c 0%, #c2410c 30%, #15803d 70%, #16a34a 100%)",
+            backgroundSize: "300% auto",
+            animation: "gradientShift 5s ease infinite",
           }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.1)" }} />
+
+          {/* Noise texture overlay */}
+          <div style={{
+            position: "absolute", inset: 0,
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E\")",
+            opacity: 0.4,
+            pointerEvents: "none",
+          }} />
+
+          {/* Decorative circles */}
+          <div style={{
+            position: "absolute", top: -60, right: -60, width: 300, height: 300,
+            borderRadius: "50%", background: "rgba(255,255,255,0.06)",
+            pointerEvents: "none",
+          }} />
+          <div style={{
+            position: "absolute", bottom: -40, left: 40, width: 200, height: 200,
+            borderRadius: "50%", background: "rgba(255,255,255,0.05)",
+            pointerEvents: "none",
+          }} />
+
           <AnimatedSection animation="fade-up">
-            <div style={{ position: "relative", zIndex: 1, padding: "64px 32px", textAlign: "center", color: "#fff" }}>
-              <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, marginBottom: 24 }}>
+            <div style={{ position: "relative", zIndex: 1, padding: "72px 40px", textAlign: "center", color: "#fff" }}>
+
+              {/* Floating emoji badge */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                style={{ fontSize: 40, marginBottom: 20 }}
+              >
+                🔔
+              </motion.div>
+
+              <h2 style={{
+                fontSize: "clamp(2rem, 2vw, 3.5rem)", fontWeight: 900, marginBottom: 24,
+                lineHeight: 1.15, letterSpacing: "-0.5px",
+                textShadow: "0 2px 20px rgba(0,0,0,0.2)",
+              }}>
                 Stay Updated With Every Government Job Notifications 2026
               </h2>
-              <p style={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", opacity: 0.9, marginBottom: 40, maxWidth: 560, margin: "0 auto 40px" }}>
+              <p className="max-w-4xl mx-auto mb-5" >
                 A missed job opportunity hurts more than a rejection. It turns into lasting regret for thousands of students everyday, simply due to late updates. With CareerMitra, get timely personalized job updates directly to your mobile/email.
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
-                <a href="#" style={{
-                  padding: "16px 40px", background: "#fff", color: "#16a34a",
-                  borderRadius: 9999, fontWeight: 900, fontSize: "clamp(1rem, 2vw, 1.15rem)",
-                  textDecoration: "none", transition: "transform 0.2s",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-                }}
-                  onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
-                  onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-                >
-                  Subscribe for Free Job Alerts
-                </a>
-                <a href="#" style={{
+
+              {/* Stats row */}
+              {/* <div style={{
+                display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32,
+                marginBottom: 48, opacity: 0.92,
+              }}>
+                {[["50K+", "Active Users"], ["1000+", "Jobs Listed"], ["100%", "Free Access"]].map(([num, label]) => (
+                  <div key={label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 900, lineHeight: 1 }}>{num}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.8, marginTop: 4, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</div>
+                  </div>
+                ))}
+              </div> */}
+
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20 }}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+                  <Link to="/register" style={{
+                    padding: "18px 44px", background: "#fff", color: "#16a34a",
+                    borderRadius: 9999, fontWeight: 900, fontSize: "clamp(1rem, 2vw, 1.1rem)",
+                    textDecoration: "none",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    letterSpacing: "0.01em",
+                  }}>
+                    Subscribe For Matching Job Alerts
+                    <span style={{ fontSize: 18 }}>→</span>
+                  </Link>
+                </motion.div>
+                {/* <a href="#" style={{
                   padding: "16px 40px", background: "#3b82f6", color: "#fff",
                   borderRadius: 9999, fontWeight: 900, fontSize: "clamp(1rem, 2vw, 1.15rem)",
                   textDecoration: "none", border: "1px solid #60a5fa", transition: "transform 0.2s",
@@ -304,17 +524,23 @@ export default function Home() {
                   onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
                   JOIN TELEGRAM
-                </a>
+                </a> */}
               </div>
             </div>
           </AnimatedSection>
-        </div>
+        </motion.div>
       </section>
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes scrollLeft { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
         @keyframes scrollRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
-        @keyframes gradientShift { 0%,100%{background-position:0%} 50%{background-position:200%} }
+        @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        @keyframes textShimmer { 0%{background-position:0% center} 100%{background-position:200% center} }
+        @keyframes floatUp {
+          0% { opacity: 0; transform: translateY(30px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
     </div>
   );

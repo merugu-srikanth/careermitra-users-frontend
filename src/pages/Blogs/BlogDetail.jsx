@@ -1,349 +1,548 @@
-// BlogDetail.jsx — Complete, SEO-Optimized Blog Detail Page with Base64 Images
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import {
-  FaShare, FaHome, FaChevronRight, FaCalendar, FaUser, FaEye, FaClock,
-  FaFacebook, FaTwitter, FaLinkedin, FaLink, FaArrowLeft, FaFire,
-  FaTag, FaBell, FaNewspaper, FaChartLine, FaHeart, FaBookmark
-} from "react-icons/fa";
-import blogImg from "../../assets/blog-sample.png";
+import SEO from '../../components/SEO';
 
-// Helper: Convert image URL to Base64
-const convertImageToBase64 = (url) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      try {
-        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(dataURL);
-      } catch (e) {
-        reject(e);
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-    img.src = url;
-  });
-};
+/* ─── Styles ─────────────────────────────────────────────────────────────── */
+const BD_STYLES = `
 
-// SEO-Friendly Image Component
-const OptimizedImage = ({ src, alt, className, sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px", width, height, loading = "lazy" }) => {
-  const [imageSrc, setImageSrc] = useState(src);
+/* progress bar */
+.bd-progress { position:fixed;top:0;left:0;right:0;z-index:9999;height:3px;background:transparent; }
+.bd-progress-fill { height:100%;background:linear-gradient(90deg,#f97316,#eab308,#22c55e);transition:width 0.1s linear; }
 
+/* layout */
+.bd-layout { display:grid;grid-template-columns:1fr 320px;gap:48px;align-items:start; }
+@media(max-width:1024px){ .bd-layout { grid-template-columns:1fr; } }
+
+/* article */
+.bd-article { min-width:0; }
+
+/* hero image */
+.bd-hero-img-wrap { border-radius:20px;overflow:hidden;margin-bottom:32px;box-shadow:0 12px 48px rgba(0,0,0,0.1);position:relative; }
+.bd-hero-img { width:100%;height:auto;object-fit:cover;display:block; }
+.bd-hero-cat { position:absolute;top:16px;left:16px;background:#f97316;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:100px; }
+
+/* title */
+.bd-title { font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;color:#111827;line-height:1.2;margin:0 0 20px; }
+
+/* meta row */
+.bd-meta { display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 0;border-top:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6;margin-bottom:28px; }
+.bd-meta-item { display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#6b7280; }
+.bd-meta-item svg { width:13px;height:13px; }
+.bd-meta-item.author { color:#111827;font-weight:600; }
+
+/* ── AI SUMMARY BOX ── */
+.bd-summary-btn {
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,#f97316,#ea580c);
+  color:#fff;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;
+  padding:12px 22px;border-radius:12px;margin-bottom:32px;
+  box-shadow:0 4px 16px rgba(249,115,22,0.3);
+  transition:transform 0.18s,box-shadow 0.18s;
+}
+.bd-summary-btn:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(249,115,22,0.38); }
+.bd-summary-btn svg { width:16px;height:16px; }
+
+.bd-summary-box {
+  background:linear-gradient(135deg,#fff7ed 0%,#fef9f5 100%);
+  border:1.5px solid rgba(249,115,22,0.2);
+  border-radius:16px;margin-bottom:36px;overflow:hidden;
+}
+.bd-summary-header {
+  background:linear-gradient(135deg,#f97316,#ea580c);
+  padding:12px 20px;display:flex;align-items:center;gap:10px;
+}
+.bd-summary-header span { font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:#fff;letter-spacing:0.03em; }
+.bd-summary-header svg { width:16px;height:16px;color:#fff; }
+.bd-summary-dot { width:8px;height:8px;border-radius:50%;background:#fff;opacity:0.7;animation:bd-blink 1s step-end infinite; }
+@keyframes bd-blink { 0%,100%{opacity:0.7}50%{opacity:0} }
+
+.bd-summary-body { padding:20px 24px; }
+.bd-summary-text {
+  font-family:'Source Serif 4',Georgia,serif;
+  font-size:0.97rem;color:#374151;line-height:1.85;
+  margin:0;white-space:pre-wrap;
+}
+.bd-cursor { display:inline-block;width:2px;height:1em;background:#f97316;margin-left:2px;vertical-align:text-bottom;animation:bd-blink 0.75s step-end infinite; }
+
+/* short desc callout */
+.bd-callout {
+  position:relative;border-radius:16px;overflow:hidden;margin-bottom:32px;
+  background:linear-gradient(135deg,#fff7ed,#f0fdf4);border:1px solid rgba(249,115,22,0.13);
+}
+.bd-callout-bar { position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,#f97316,#22c55e); }
+.bd-callout-inner { padding:20px 24px 20px 28px; }
+.bd-callout-inner p { font-family:'Source Serif 4',Georgia,serif;font-size:1.05rem;font-style:italic;color:#374151;margin:0;line-height:1.75; }
+
+/* article content */
+.bd-content { line-height:1.9;color:#1f2937; }
+.bd-content > p:first-of-type::first-letter { font-weight:800;font-size:4.8rem;line-height:0.8;float:left;margin:0.1em 0.12em -0.05em 0;color:#f97316; }
+.bd-content p { margin:0 0 1.7rem;text-align:justify;hyphens:auto; }
+.bd-content h1 { font-family:'Playfair Display',Georgia,serif;font-size:1.9rem;font-weight:800;color:#111827;margin:2.4rem 0 1rem;padding-bottom:0.5rem;border-bottom:3px solid #f97316; }
+.bd-content h2 { font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:#111827;margin:2.8rem 0 1rem;position:relative;padding-left:1rem; }
+.bd-content h2::before { content:'';position:absolute;left:0;top:0.15em;bottom:0.15em;width:4px;border-radius:4px;background:linear-gradient(180deg,#f97316,#22c55e); }
+.bd-content h3 { font-family:'DM Sans',sans-serif;font-size:1.18rem;font-weight:600;color:#374151;margin:2rem 0 0.7rem;display:flex;align-items:center;gap:0.5rem; }
+.bd-content h3::before { content:'';display:inline-block;width:20px;height:3px;background:#f97316;border-radius:3px;flex-shrink:0; }
+.bd-content h4 { font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;color:#f97316;margin:1.8rem 0 0.5rem;text-transform:uppercase;letter-spacing:0.08em; }
+.bd-content strong,.bd-content b { font-weight:700;color:#111827;background:linear-gradient(120deg,rgba(249,115,22,0.12),rgba(249,115,22,0.05));padding:0 4px 1px;border-radius:4px; }
+.bd-content em,.bd-content i { font-style:italic;color:#4b5563; }
+.bd-content ul { list-style:none;padding:1rem 1.2rem;margin:0.5rem 0 1.8rem;background:linear-gradient(135deg,#fff7ed,#f0fdf4);border-radius:14px;border:1px solid rgba(249,115,22,0.12); }
+.bd-content ul li { position:relative;padding:0.4rem 0 0.4rem 1.8rem;border-bottom:1px dashed rgba(249,115,22,0.15);font-size:1rem;color:#374151; }
+.bd-content ul li:last-child { border-bottom:none; }
+.bd-content ul li::before { content:'';position:absolute;left:0.2rem;top:0.85rem;width:8px;height:8px;background:#f97316;border-radius:50%;box-shadow:0 0 0 3px rgba(249,115,22,0.15); }
+.bd-content ol { list-style:none;counter-reset:ol-c;padding:0;margin:0.5rem 0 1.8rem; }
+.bd-content ol li { counter-increment:ol-c;position:relative;padding:0.65rem 1rem 0.65rem 3.4rem;margin-bottom:6px;background:#fff;border-radius:10px;border:1px solid #f3f4f6;box-shadow:0 2px 6px rgba(0,0,0,0.04);color:#374151;transition:box-shadow 0.18s,transform 0.18s; }
+.bd-content ol li:hover { box-shadow:0 4px 14px rgba(249,115,22,0.1);transform:translateX(3px); }
+.bd-content ol li::before { content:counter(ol-c);position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);width:1.9rem;height:1.9rem;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(249,115,22,0.3); }
+.bd-content blockquote { margin:2.5rem 0;padding:1.6rem 1.8rem;background:#fff;border-left:5px solid #f97316;border-radius:0 14px 14px 0;box-shadow:0 6px 28px rgba(249,115,22,0.09);position:relative;overflow:hidden; }
+.bd-content blockquote::before { content:'201C';position:absolute;top:-0.6rem;left:0.8rem;font-family:'Playfair Display',Georgia,serif;font-size:6rem;line-height:1;color:rgba(249,115,22,0.1);pointer-events:none; }
+.bd-content blockquote p { margin:0;font-style:italic;font-size:1.1rem;line-height:1.7;color:#374151;position:relative;z-index:1;text-align:left; }
+.bd-content blockquote p::first-letter { all:unset; }
+.bd-content-table-wrap { overflow-x:auto;margin:2rem 0;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.07); }
+.bd-content table { width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:0.88rem;min-width:400px; }
+.bd-content thead tr { background:linear-gradient(135deg,#f97316,#ea580c); }
+.bd-content th { padding:0.85rem 1rem;color:#fff;font-weight:600;text-align:left;letter-spacing:0.04em;font-size:0.8rem;text-transform:uppercase; }
+.bd-content tbody tr:nth-child(odd) { background:#fff; }
+.bd-content tbody tr:nth-child(even) { background:#fff7ed; }
+.bd-content tbody tr:hover { background:#fef3c7; }
+.bd-content td { padding:0.72rem 1rem;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:top; }
+.bd-content tbody tr:last-child td { border-bottom:none; }
+.bd-content code { font-family:'Courier New',monospace;font-size:0.87em;background:#fff7ed;color:#ea580c;padding:0.15em 0.45em;border-radius:5px;border:1px solid #fed7aa; }
+.bd-content pre { background:#1a1a2e;color:#e2e8f0;padding:1.3rem 1.5rem;border-radius:14px;overflow-x:auto;margin:1.5rem 0;font-size:0.87rem;line-height:1.7;box-shadow:0 8px 28px rgba(0,0,0,0.18); }
+.bd-content pre code { background:none;color:inherit;border:none;padding:0; }
+.bd-content hr { border:none;height:1px;background:linear-gradient(90deg,transparent,#f97316 30%,#22c55e 70%,transparent);margin:3rem 0; }
+.bd-content img { max-width:100%;height:auto;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,0.1);margin:2rem auto;display:block; }
+.bd-content a { color:#f97316;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;transition:color 0.18s; }
+.bd-content a:hover { color:#ea580c; }
+
+/* tags */
+.bd-tags { display:flex;flex-wrap:wrap;gap:8px;margin:28px 0; }
+.bd-tag { font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:500;color:#6b7280;background:#f3f4f6;padding:6px 14px;border-radius:100px;transition:all 0.18s;cursor:pointer;text-decoration:none; }
+.bd-tag:hover { background:#fff7ed;color:#f97316;border-color:#f97316; }
+
+/* share */
+.bd-share { display:flex;align-items:center;gap:10px;padding:20px 0;border-top:1px solid #f3f4f6;margin-top:16px; }
+.bd-share-label { font-family:'DM Sans',sans-serif;font-size:0.85rem;color:#9ca3af;margin-right:4px; }
+.bd-share-btn { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;color:#fff;transition:transform 0.18s,opacity 0.18s; }
+.bd-share-btn:hover { transform:scale(1.12);opacity:0.9; }
+.bd-share-copy { font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;color:#22c55e;margin-left:4px; }
+
+/* ── SIDEBAR ── */
+.bd-sidebar { position:sticky;top:88px; }
+@media(max-width:1024px){ .bd-sidebar { position:static; } }
+
+.bd-sidebar-card {
+  background:#fff;border-radius:16px;
+  border:1.5px solid #f3f4f6;
+  overflow:hidden;margin-bottom:20px;
+}
+.bd-sidebar-head {
+  padding:12px 18px;display:flex;align-items:center;gap:8px;
+  font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;
+  letter-spacing:0.04em;text-transform:uppercase;
+}
+.bd-sidebar-head svg { width:14px;height:14px; }
+.bd-sidebar-head.orange { background:linear-gradient(135deg,#f97316,#ea580c);color:#fff; }
+.bd-sidebar-head.green  { background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff; }
+.bd-sidebar-head.dark   { background:#111827;color:#fff; }
+.bd-sidebar-body { padding:16px; }
+
+/* author card */
+.bd-author-avatar {
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,#f97316,#ea580c);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;
+  margin:0 auto 12px;
+}
+.bd-author-name { font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;font-weight:700;color:#111827;text-align:center;margin:0 0 4px; }
+.bd-author-role { font-family:'DM Sans',sans-serif;font-size:0.8rem;color:#9ca3af;text-align:center;margin:0 0 14px; }
+.bd-author-stats { display:flex;justify-content:center;gap:20px; }
+.bd-author-stat { text-align:center; }
+.bd-author-stat strong { display:block;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;color:#111827; }
+.bd-author-stat span { font-family:'DM Sans',sans-serif;font-size:0.72rem;color:#9ca3af; }
+
+/* related mini cards */
+.bd-related-item { display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f9fafb;text-decoration:none; }
+.bd-related-item:last-child { border-bottom:none;padding-bottom:0; }
+.bd-related-item:first-child { padding-top:0; }
+.bd-related-img { width:60px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0; }
+.bd-related-img-placeholder { width:60px;height:60px;border-radius:10px;background:#f3f4f6;flex-shrink:0; }
+.bd-related-title { font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;color:#111827;line-height:1.4;margin:0 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color 0.18s; }
+.bd-related-item:hover .bd-related-title { color:#f97316; }
+.bd-related-date { font-family:'DM Sans',sans-serif;font-size:0.73rem;color:#9ca3af; }
+
+/* sidebar tags */
+.bd-sidebar-tags { display:flex;flex-wrap:wrap;gap:7px;padding:14px 16px; }
+.bd-sidebar-tag { font-family:'DM Sans',sans-serif;font-size:0.77rem;font-weight:500;background:#f9fafb;color:#6b7280;padding:5px 12px;border-radius:100px;text-decoration:none;transition:all 0.18s;border:1px solid #f3f4f6; }
+.bd-sidebar-tag:hover { background:#fff7ed;color:#f97316;border-color:rgba(249,115,22,0.25); }
+
+/* alert box */
+.bd-alert { background:linear-gradient(135deg,#111827,#1f2937);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px; }
+.bd-alert-icon { font-size:1.8rem;margin-bottom:8px; }
+.bd-alert-title { font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:700;color:#fff;margin:0 0 4px; }
+.bd-alert-sub { font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#9ca3af;margin:0 0 14px; }
+.bd-alert-btn { display:block;background:#f97316;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;padding:10px;border-radius:10px;text-decoration:none;transition:background 0.18s; }
+.bd-alert-btn:hover { background:#ea580c; }
+
+/* breadcrumb */
+.bd-crumb { display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#9ca3af;padding:20px 0 28px; }
+.bd-crumb a { color:#9ca3af;text-decoration:none;transition:color 0.18s; }
+.bd-crumb a:hover { color:#f97316; }
+.bd-crumb svg { width:10px;height:10px; }
+
+/* back btn */
+.bd-back { display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;color:#f97316;text-decoration:none;background:#fff7ed;padding:9px 16px;border-radius:10px;transition:all 0.18s;margin-bottom:20px; }
+.bd-back:hover { background:#ffedd5; }
+.bd-back svg { width:13px;height:13px; }
+`;
+
+if (typeof document !== 'undefined' && !document.getElementById('bd-styles')) {
+  const el = document.createElement('style'); el.id = 'bd-styles'; el.textContent = BD_STYLES;
+  document.head.appendChild(el);
+}
+
+/* wrap tables */
+const wrapTables = (html) =>
+  (html || '')
+    .replace(/<table/g, '<div class="bd-content-table-wrap"><table')
+    .replace(/<\/table>/g, '</table></div>');
+
+/* fmtDate */
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+
+/* Reading progress */
+const ReadingProgress = () => {
+  const [pct, setPct] = useState(0);
   useEffect(() => {
-    if (src && src.startsWith('http')) {
-      convertImageToBase64(src)
-        .then(base64 => setImageSrc(base64))
-        .catch(err => {
-          console.warn(`Base64 conversion failed for ${src}:`, err);
-          setImageSrc(blogImg);
-        });
-    } else if (!src) {
-      setImageSrc(blogImg);
-    }
-  }, [src]);
-
-  return (
-    <img
-      src={imageSrc}
-      alt={alt || "Blog post image"}
-      className={className}
-      sizes={sizes}
-      width={width}
-      height={height}
-      loading={loading}
-      decoding="async"
-      onError={(e) => { e.target.onerror = null; e.target.src = blogImg; }}
-    />
-  );
+    const fn = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setPct(h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0);
+    };
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+  return <div className="bd-progress"><div className="bd-progress-fill" style={{ width: `${pct}%` }} /></div>;
 };
 
+/* icons */
+const ChevronRight = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>;
+const ArrowLeft = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>;
+const CalIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+const EyeIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+const ClockIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+const UserIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>;
+const SparkleIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>;
+const FireIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22c5.5 0 10-4.5 10-10 0-2.6-1-5-2.7-6.8C17.8 7 16 9 13 9c1-3-1-6-3-7-2.5 3-3 6-1 9-2.5-1-4-3-4-5-1.5 1.5-2 4-2 6 0 5.5 4.5 10 9 10z"/></svg>;
+const TagIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
+const BellIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
+const LinkIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
+const CheckIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>;
+
+const readTime = (html) => {
+  if (!html) return 5;
+  return Math.max(1, Math.ceil(html.replace(/<[^>]+>/g, '').split(/\s+/).length / 200));
+};
+
+const getInitials = (name) => (name || 'CM').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+/* ── Main Component ───────────────────────────────────────────────────────── */
 const BlogDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [likesCount, setLikesCount] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(null);
   const [recentBlogs, setRecentBlogs] = useState([]);
-  const [trendingBlogs, setTrendingBlogs] = useState([]);
 
-  const API_BASE = 'https://careermitra.tech/api';
+  // AI summary state
+  const [summaryVisible, setSummaryVisible] = useState(false);
+  const [summaryText, setSummaryText] = useState('');
+  const [typing, setTyping] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchBlog();
-    fetchRecentAndTrending();
-    window.scrollTo(0, 0);
-  }, [slug]);
+  const typingRef = useRef(null);
+
+  useEffect(() => { fetchBlog(); fetchRecent(); window.scrollTo(0, 0); }, [slug]);
+  useEffect(() => () => clearInterval(typingRef.current), []);
 
   const fetchBlog = async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
-      const response = await fetch(`${API_BASE}/blogs/slug/${slug}`);
-      const result = await response.json();
-      if (result.success && result.data) {
-        setBlog(result.data);
-        setLikesCount(result.data.likes || 0);
-      } else {
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('Error fetching blog:', error);
-      navigate('/');
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch(`https://careermitra.tech/api/blogs/slug/${slug}`);
+      const d = await r.json();
+      if (d.success) setBlog(d.data);
+      else setError(d.message || 'Blog not found');
+    } catch { setError('Network error. Please try again.'); }
+    finally { setLoading(false); }
   };
 
-  const fetchRecentAndTrending = async () => {
+  const fetchRecent = async () => {
     try {
-      const response = await fetch(`${API_BASE}/blogs?page=1&limit=10`);
-      const result = await response.json();
-      if (result.success && result.data) {
-        const allBlogs = result.data.blogs || [];
-        const recent = allBlogs.filter(b => b.slug !== slug).slice(0, 4);
-        setRecentBlogs(recent);
-        const trending = [...allBlogs].sort((a, b) => (b.views || 0) - (a.views || 0)).filter(b => b.slug !== slug).slice(0, 5);
-        setTrendingBlogs(trending);
-      }
-    } catch (error) {
-      console.error('Error fetching recent blogs:', error);
-    }
+      const r = await fetch('https://careermitra.tech/api/blogs?page=1&limit=6');
+      const d = await r.json();
+      if (d.success) setRecentBlogs((d.data.blogs || []).filter(b => b.slug !== slug).slice(0, 4));
+    } catch { }
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
+  /* typewriter effect */
+  const startTypewriter = (text) => {
+    setSummaryText(''); setTyping(true); let i = 0;
+    clearInterval(typingRef.current);
+    typingRef.current = setInterval(() => {
+      setSummaryText(text.slice(0, ++i));
+      if (i >= text.length) { clearInterval(typingRef.current); setTyping(false); }
+    }, 18);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Recent';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
+  const handleSummary = () => {
+    if (summaryVisible) { setSummaryVisible(false); setSummaryText(''); return; }
+    setSummaryVisible(true);
+    // Build a summary from blog data without external API
+    const lines = [];
+    const raw = (blog.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const sentences = raw.match(/[^.!?]+[.!?]+/g) || [];
+    const short = blog.short_description || '';
+
+    lines.push(`📌 Overview\n${short}`);
+    if (sentences.length > 0) {
+      lines.push(`\n\n✨ Key Highlights`);
+      // Pick ~4 sentences from different parts of the content
+      const picks = [0, Math.floor(sentences.length * 0.25), Math.floor(sentences.length * 0.55), Math.floor(sentences.length * 0.8)];
+      picks.forEach(idx => {
+        const s = (sentences[idx] || '').trim();
+        if (s.length > 30) lines.push(`\n• ${s}`);
+      });
+    }
+    if (blog.tags && blog.tags.length) lines.push(`\n\n🏷️ Topics: ${blog.tags.join(', ')}`);
+
+    startTypewriter(lines.join(''));
   };
 
-  // Structured Data for SEO
-  const structuredData = blog ? {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": blog.title,
-    "description": blog.short_description,
-    "image": blog.featured_image,
-    "datePublished": blog.published_at,
-    "dateModified": blog.updated_at || blog.published_at,
-    "author": {
-      "@type": "Person",
-      "name": blog.author_name || "CareerMitra"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "CareerMitra",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://careermitra.tech/logo.png"
-      }
-    },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": window.location.href
-    }
-  } : {};
+  const handleCopy = async () => {
+    try { await navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2500); } catch { }
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-          <div className="w-16 h-16 border-4 border-green-200 border-b-green-500 rounded-full animate-spin absolute top-0 left-0"></div>
-        </div>
+  /* ── Loading ── */
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'relative', width: 56, height: 56 }}>
+        <div style={{ position: 'absolute', inset: 0, border: '3px solid #fed7aa', borderTopColor: '#f97316', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!blog) return null;
+  /* ── Error ── */
+  if (error || !blog) return (
+    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      <div style={{ fontSize: '4rem', fontWeight: 800, color: '#f3f4f6', fontFamily: "'Playfair Display',serif" }}>404</div>
+      <p style={{ fontFamily: "'DM Sans',sans-serif", color: '#6b7280', marginBottom: 24 }}>{error || 'Blog not found'}</p>
+      <Link to="/blogs" style={{ background: '#f97316', color: '#fff', padding: '12px 24px', borderRadius: 12, textDecoration: 'none', fontFamily: "'DM Sans',sans-serif", fontWeight: 600 }}>Back to Blogs</Link>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* SEO Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
+    <>
+      <SEO
+        title={blog.meta_title || blog.title}
+        description={blog.meta_description || blog.short_description}
+        keywords={(blog.tags || []).join(', ')}
+        url={`https://www.careermitra.in/blog/${blog.slug}`}
+        image={blog.featured_image}
+      />
 
-      {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-4 pt-24 md:pt-28">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Link to="/" className="hover:text-orange-500 transition-colors flex items-center gap-1"><FaHome size={12} /> Home</Link>
-          <FaChevronRight size={10} />
-          <Link to="/" className="hover:text-orange-500">Blog</Link>
-          <FaChevronRight size={10} />
-          <span className="text-gray-700 truncate max-w-[200px]">{blog.title}</span>
-        </div>
-      </div>
+      <ReadingProgress />
 
-      {/* Main Content - 70/30 Layout */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-10">
-          {/* Left Side - 70% Main Content */}
-          <div className="lg:w-[70%]">
-            {/* Hero Image */}
-            <div className="relative rounded-2xl overflow-hidden mb-6">
-              <OptimizedImage
-                src={blog.featured_image}
-                alt={blog.image_alt_text || blog.title}
-                className="w-full h-auto object-cover rounded-2xl"
-                width="1200"
-                height="630"
-                loading="eager"
-              />
-              <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-orange-500 text-white text-sm font-semibold rounded-full">{blog.category || 'Article'}</span>
+      <div style={{ background: '#fff', minHeight: '100vh' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', paddingTop: 80 }}>
+
+          {/* Breadcrumb */}
+          <nav className="bd-crumb">
+            <Link to="/">Home</Link>
+            <ChevronRight />
+            <Link to="/blogs">Blog</Link>
+            <ChevronRight />
+            <span style={{ color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{blog.title}</span>
+          </nav>
+
+          {/* 70/30 Layout */}
+          <div className="bd-layout">
+
+            {/* ── LEFT: Article ── */}
+            <article className="bd-article">
+              <Link to="/blogs" className="bd-back"><ArrowLeft /> All Articles</Link>
+
+              {/* Hero image */}
+              <div className="bd-hero-img-wrap">
+                <img src={blog.featured_image} alt={blog.image_alt_text || blog.title}
+                  className="bd-hero-img" loading="eager"
+                  onError={e => { e.target.parentNode.style.background = '#f9fafb'; e.target.style.display = 'none'; }} />
+                {blog.category && <span className="bd-hero-cat">{blog.category}</span>}
               </div>
-            </div>
 
-            {/* Title & Meta */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">{blog.title}</h1>
-            
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 pb-6 border-b border-gray-200 mb-6">
-              <span className="flex items-center gap-1.5"><FaUser className="text-orange-500" /> {blog.author_name || 'CareerMitra'}</span>
-              <span className="flex items-center gap-1.5"><FaCalendar className="text-green-500" /> {formatDate(blog.published_at)}</span>
-              <span className="flex items-center gap-1.5"><FaEye className="text-blue-500" /> {blog.views || 0} views</span>
-              <span className="flex items-center gap-1.5"><FaClock className="text-purple-500" /> 6 min read</span>
-            </div>
+              {/* Title */}
+              <h1 className="bd-title">{blog.title}</h1>
 
-            {/* Short Description */}
-            {blog.short_description && (
-              <div className="bg-gradient-to-r from-orange-50 to-green-50 p-6 rounded-2xl mb-8 border-l-4 border-orange-500">
-                <p className="text-gray-700 text-base md:text-lg leading-relaxed italic">"{blog.short_description}"</p>
+              {/* Meta */}
+              <div className="bd-meta">
+                <div className="bd-meta-item author"><UserIcon /> {blog.author_name || 'Career Mitra'}</div>
+                <div className="bd-meta-item"><CalIcon /> {fmtDate(blog.published_at || blog.createdAt)}</div>
+                <div className="bd-meta-item"><EyeIcon /> {(blog.views || 0).toLocaleString()} views</div>
+                <div className="bd-meta-item"><ClockIcon /> {readTime(blog.content)} min read</div>
               </div>
-            )}
 
-            {/* Main Content */}
-            <div 
-              className="prose prose-lg max-w-none prose-headings:text-gray-800 prose-headings:font-bold prose-p:text-gray-600 prose-a:text-orange-500 prose-strong:text-gray-800 prose-li:text-gray-600 prose-img:rounded-xl"
-              dangerouslySetInnerHTML={{ __html: blog.content || '<p>Content coming soon...</p>' }}
-            />
+              {/* ── AI SUMMARY BUTTON ── */}
+              <button className="bd-summary-btn" onClick={handleSummary}>
+                <SparkleIcon />
+                {summaryVisible ? 'Hide Summary' : '✨ AI Summary — Click to Summarise'}
+              </button>
 
-            {/* Image Gallery */}
-            {blog.images && blog.images.length > 0 && (
-              <div className="my-10">
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><FaNewspaper className="text-orange-500" /> Image Gallery</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {blog.images.map((img, idx) => (
-                    <OptimizedImage key={idx} src={img.url} alt={img.alt_text || 'Blog image'} className="rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer hover:scale-105" width="300" height="200" />
+              {/* Summary box with typewriter */}
+              {summaryVisible && (
+                <div className="bd-summary-box">
+                  <div className="bd-summary-header">
+                    <SparkleIcon />
+                    <span>AI-Generated Summary</span>
+                    {typing && <div className="bd-summary-dot" style={{ marginLeft: 'auto' }} />}
+                  </div>
+                  <div className="bd-summary-body">
+                    <p className="bd-summary-text">
+                      {summaryText}
+                      {typing && <span className="bd-cursor" />}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Short description callout */}
+              {blog.short_description && (
+                <div className="bd-callout">
+                  <div className="bd-callout-bar" />
+                  <div className="bd-callout-inner">
+                    <p>"{blog.short_description}"</p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── MAIN CONTENT ── */}
+              <div className="bd-content"
+                dangerouslySetInnerHTML={{ __html: wrapTables(blog.content || '<p>Content coming soon…</p>') }} />
+
+              {/* Tags */}
+              {blog.tags && blog.tags.length > 0 && (
+                <div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, marginTop: 32 }}>Tags</div>
+                  <div className="bd-tags">
+                    {blog.tags.map((tag, i) => <span key={i} className="bd-tag">#{tag}</span>)}
+                  </div>
+                </div>
+              )}
+
+              {/* Share */}
+              <div className="bd-share">
+                <span className="bd-share-label">Share:</span>
+                <button className="bd-share-btn" style={{ background: '#1877F2' }} aria-label="Facebook"
+                  onClick={() => window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+                </button>
+                <button className="bd-share-btn" style={{ background: '#1DA1F2' }} aria-label="Twitter"
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`, '_blank')}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" /></svg>
+                </button>
+                <button className="bd-share-btn" style={{ background: '#0A66C2' }} aria-label="LinkedIn"
+                  onClick={() => window.open(`https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank')}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
+                </button>
+                <button className="bd-share-btn" style={{ background: copied ? '#22c55e' : '#6b7280' }} aria-label="Copy link" onClick={handleCopy}>
+                  {copied ? <CheckIcon /> : <LinkIcon />}
+                </button>
+                {copied && <span className="bd-share-copy">Copied!</span>}
+              </div>
+            </article>
+
+            {/* ── RIGHT: Sticky Sidebar ── */}
+            <aside className="bd-sidebar">
+
+              {/* Author card */}
+              {/* <div className="bd-sidebar-card">
+                <div className="bd-sidebar-head orange"><UserIcon /> Author</div>
+                <div className="bd-sidebar-body" style={{ textAlign: 'center', padding: '20px 16px' }}>
+                  <div className="bd-author-avatar">{getInitials(blog.author_name)}</div>
+                  <div className="bd-author-name">{blog.author_name || 'Career Mitra'}</div>
+                  <div className="bd-author-role">Career Expert &amp; Writer</div>
+                  <div className="bd-author-stats">
+                    <div className="bd-author-stat"><strong>{(blog.views || 0).toLocaleString()}</strong><span>Views</span></div>
+                    <div className="bd-author-stat"><strong>{blog.tags?.length || 0}</strong><span>Topics</span></div>
+                    <div className="bd-author-stat"><strong>★ 4.9</strong><span>Rating</span></div>
+                  </div>
+                </div>
+              </div> */}
+
+              {/* Latest blogs */}
+              {recentBlogs.length > 0 && (
+                <div className="bd-sidebar-card">
+                  <div className="bd-sidebar-head green"><FireIcon /> Latest Articles</div>
+                  <div className="bd-sidebar-body">
+                    {recentBlogs.map(post => (
+                      <Link key={post._id} to={`/blog/${post.slug}`} className="bd-related-item">
+                        {post.featured_image
+                          ? <img src={post.featured_image} alt={post.title} className="bd-related-img" onError={e => { e.target.style.display = 'none'; }} />
+                          : <div className="bd-related-img-placeholder" />}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="bd-related-title">{post.title}</div>
+                          <div className="bd-related-date">{fmtDate(post.published_at || post.createdAt)}</div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags cloud */}
+              {blog.tags && blog.tags.length > 0 && (
+                <div className="bd-sidebar-card">
+                  <div className="bd-sidebar-head dark"><TagIcon /> Topics</div>
+                  <div className="bd-sidebar-tags">
+                    {blog.tags.map((tag, i) => <span key={i} className="bd-sidebar-tag">#{tag}</span>)}
+                  </div>
+                </div>
+              )}
+
+              {/* Job alert CTA */}
+              <div className="bd-alert">
+                <div className="bd-alert-icon">🔔</div>
+                <div className="bd-alert-title">Never Miss a Job Alert</div>
+                <div className="bd-alert-sub">Get real-time govt job updates straight to you</div>
+                <Link to="/user-dashboard" className="bd-alert-btn">Enable Notifications</Link>
+              </div>
+
+              {/* Article stats */}
+              <div className="bd-sidebar-card">
+                <div className="bd-sidebar-head" style={{ background: 'linear-gradient(135deg,#f97316,#22c55e)', color: '#fff' }}>
+                  <EyeIcon /> Article Stats
+                </div>
+                <div className="bd-sidebar-body">
+                  {[
+                    { label: 'Total Views', val: (blog.views || 0).toLocaleString() },
+                    { label: 'Read Time', val: `${readTime(blog.content)} min` },
+                    { label: 'Published', val: fmtDate(blog.published_at || blog.createdAt) },
+                    { label: 'Category', val: blog.category || 'General' },
+                  ].map(({ label, val }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f9fafb' }}>
+                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.8rem', color: '#9ca3af' }}>{label}</span>
+                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>{val}</span>
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Tags */}
-            {blog.tags && blog.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 my-6">
-                {blog.tags.map((tag, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-orange-100 hover:text-orange-600 transition-all cursor-pointer">#{tag}</span>
-                ))}
-              </div>
-            )}
-
-            {/* Interaction Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-6 mt-6 border-t border-gray-200">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">Share this article:</span>
-                <button className="p-2 bg-[#1877F2] text-white rounded-full hover:bg-[#1877F2]/80 transition-all" aria-label="Share on Facebook"><FaFacebook size={14} /></button>
-                <button className="p-2 bg-[#1DA1F2] text-white rounded-full hover:bg-[#1DA1F2]/80 transition-all" aria-label="Share on Twitter"><FaTwitter size={14} /></button>
-                <button className="p-2 bg-[#0A66C2] text-white rounded-full hover:bg-[#0A66C2]/80 transition-all" aria-label="Share on LinkedIn"><FaLinkedin size={14} /></button>
-                <button onClick={handleShare} className="p-2 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-all" aria-label="Copy link"><FaLink size={14} /></button>
-              </div>
-              {copied && <span className="text-green-500 text-sm">Link copied!</span>}
-            </div>
-          </div>
-
-          {/* Right Side - 30% Sidebar */}
-          <div className="lg:w-[30%] space-y-6 sticky top-24 self-start">
-            <Link to="/" className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium bg-orange-50 px-4 py-3 rounded-xl transition-all"><FaArrowLeft /> Back to All Articles</Link>
-
-            {/* Trending Posts */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3"><h3 className="text-white font-bold flex items-center gap-2"><FaFire /> Trending Now</h3></div>
-              <div className="p-4 space-y-4">
-                {trendingBlogs.slice(0, 4).map((post, idx) => (
-                  <Link key={post._id} to={`/blog/${post.slug}`} className="flex gap-3 group cursor-pointer">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-100 to-green-100 flex items-center justify-center font-bold text-orange-600 text-sm">{idx + 1}</div>
-                    <div className="flex-1"><h4 className="text-sm font-semibold text-gray-800 group-hover:text-orange-500 transition-colors line-clamp-2">{post.title}</h4><p className="text-xs text-gray-400 mt-1">{post.views || 0} views</p></div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Posts */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 px-5 py-3"><h3 className="text-white font-bold flex items-center gap-2"><FaClock /> Recent Posts</h3></div>
-              <div className="p-4 space-y-4">
-                {recentBlogs.slice(0, 4).map((post) => (
-                  <Link key={post._id} to={`/blog/${post.slug}`} className="flex gap-3 group cursor-pointer">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                      <OptimizedImage src={post.featured_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" width="80" height="80" />
-                    </div>
-                    <div className="flex-1"><h4 className="text-sm font-semibold text-gray-800 group-hover:text-green-600 transition-colors line-clamp-2">{post.title}</h4><p className="text-xs text-gray-400 mt-1">{formatDate(post.published_at)}</p></div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Categories */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-500 to-green-500 px-5 py-3"><h3 className="text-white font-bold flex items-center gap-2"><FaTag /> Categories</h3></div>
-              <div className="p-4 flex flex-wrap gap-2">
-                {['Government Jobs', 'Sarkari Naukri', 'Exam Tips', 'Career Guide', 'Recruitment'].map(cat => (
-                  <Link key={cat} to="/" className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs hover:bg-orange-100 hover:text-orange-600 transition-all">{cat}</Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Job Alert Bell */}
-            <div className="bg-gray-50 rounded-2xl p-4 text-center border border-gray-200">
-              <FaBell className="text-orange-500 text-2xl mx-auto mb-2" />
-              <h4 className="font-bold text-gray-800 text-sm">Get Job Alerts</h4>
-              <p className="text-xs text-gray-500 mt-1">Be the first to know</p>
-              <button onClick={() => navigate("/user-dashboard")} className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-xs font-medium hover:bg-orange-600 w-full">Enable Notifications</button>
-            </div>
+            </aside>
           </div>
         </div>
       </div>
-
-      {/* Related Posts Section */}
-      {recentBlogs.length > 0 && (
-        <div className="bg-gray-50 py-12 mt-8">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-8"><h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">You Might Also Like</h2><p className="text-gray-500">Continue exploring career insights and opportunities</p></div>
-            <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {recentBlogs.slice(0, 4).map((post) => (
-                <Link key={post._id} to={`/blog/${post.slug}`} className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
-                  <div className="h-36 overflow-hidden">
-                    <OptimizedImage src={post.featured_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" width="400" height="250" />
-                  </div>
-                  <div className="p-4"><h3 className="font-semibold text-gray-800 group-hover:text-orange-500 transition-colors line-clamp-2 text-sm">{post.title}</h3><p className="text-xs text-gray-400 mt-2 flex items-center gap-1"><FaCalendar size={10} /> {formatDate(post.published_at)}</p></div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="bg-gray-900 py-10"><div className="container mx-auto px-4 text-center"><p className="text-gray-400 text-sm">© 2026 CareerMitra. All rights reserved. Your trusted partner for career success.</p></div></footer>
-    </div>
+    </>
   );
 };
 

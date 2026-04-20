@@ -74,7 +74,7 @@ const ComingSoon = () => {
          <span className="text-orange-500 underline decoration-green-400 decoration-4">Coming Soon</span>
           </h2>
           
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mb-12 leading-relaxed">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mb-3 leading-relaxed">
             We're crafting a revolutionary platform to help you find the perfect government job. 
             Stay tuned for the biggest launch in career guidance!
           </p>

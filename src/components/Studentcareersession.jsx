@@ -9,7 +9,7 @@ const features = [
   { id: 5, icon: "📍", title: "Pan-India Coverage", description: "Track job openings across all the states from kashmir to kanyakumari. Both state and central level job opportunities are covered in one place.", bg: "#fff1f2", iconBg: "#ffe4e6", iconColor: "#e11d48" },
   { id: 6, icon: "🛡️", title: "Strategic Sectors", description: "Get priority alerts from the strategic departments like defence, Space research(ISRO), DRDO, Forest Services, Intelligence Bureau and more.", bg: "#f8fafc", iconBg: "#e2e8f0", iconColor: "#334155" },
   { id: 7, icon: "👥", title: "Inclusive Career Discovery", description: "Targeted focus on professional and technical fields like Polytechnic, ITI, Diploma holders and Vocational training graduates.", bg: "#f0fdfa", iconBg: "#ccfbf1", iconColor: "#0d9488" },
-  { id: 8, icon: "📄", title: "Gain insights about the recruitment process– application, exam patterns, interviews and final selection", bg: "#fffbeb", iconBg: "#fef3c7", iconColor: "#d97706" },
+  { id: 8, icon: "📄", title: "Recruitment process:", description: "Gain insights about the recruitment process– application, exam patterns, interviews and final selection", bg: "#fffbeb", iconBg: "#fef3c7", iconColor: "#d97706" },
 ];
 
 const stats = [
@@ -120,11 +120,11 @@ export default function StudentCareerSession() {
                 </div>
                 <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1f2937", marginBottom: 8 }}>{f.title}</h3>
                 <p style={{ fontSize: 13, color: "#4b5563", lineHeight: 1.6 }}>{f.description}</p>
-                {hovered === f.id && (
+                {/* {hovered === f.id && (
                   <div style={{ marginTop: 16, fontSize: 13, fontWeight: 600, color: f.iconColor, display: "flex", alignItems: "center", gap: 4 }}>
                     Learn more →
                   </div>
-                )}
+                )} */}
               </div>
             </AnimatedSection>
           ))}

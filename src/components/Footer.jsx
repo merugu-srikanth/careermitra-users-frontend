@@ -23,8 +23,7 @@ export default function Footer() {
             <img src={logo} alt="CareerMitra Logo" className="h-28 w-auto" />
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
-            Your gateway to government jobs. Get real-time alerts,
-            exam updates, and career guidance across India.
+            Your one-stop gateway for government jobs and career guidance across India.
           </p>
           {/* Social Icons */}
           <div className="flex space-x-4 mt-4">
@@ -118,7 +117,8 @@ export default function Footer() {
     >
       <FaUserPlus className="text-lg" />
       <span className="font-semibold text-lg">
-        Register Now - Get Job Alerts
+        Subscribe For Matching Job Alerts
+
       </span>
       <HiOutlineArrowRight className="group-hover:translate-x-1 transition-transform" />
     </Link>

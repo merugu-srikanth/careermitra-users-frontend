@@ -1,433 +1,576 @@
-// BlogList.jsx — Complete, SEO-Friendly, Responsive Blog Listing with Base64 Image Conversion
-// Dependencies: react-router-dom, react-icons
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import SEO from '../../components/SEO';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  FaArrowRight, FaCalendarAlt, FaClock, FaEye,
-  FaSearch, FaTimes, FaChevronLeft, FaChevronRight,
-  FaFire, FaBookOpen, FaBell, FaUser, FaTag, FaChartLine
-} from 'react-icons/fa';
-import { HiSparkles } from 'react-icons/hi';
-import blogImg from '../../assets/blog-sample.png';
+/* ─── Global styles injected once ─────────────────────────────────────── */
+const BLOGLIST_STYLES = `
 
-// Helper: Convert image URL to Base64
-const convertImageToBase64 = (url) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      try {
-        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(dataURL);
-      } catch (e) {
-        reject(e);
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-    img.src = url;
-  });
-};
 
-// ── Skeleton loader ────────────────────────────────────────────────────
+
+/* hero */
+.bl-hero {
+  background: #fff;
+  padding: 96px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+.bl-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 60% -10%, rgba(249,115,22,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.bl-hero-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: '', ; font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: #f97316;
+  background: rgba(249,115,22,0.08);
+  border: 1px solid rgba(249,115,22,0.2);
+  padding: 5px 14px; border-radius: 100px;
+  margin-bottom: 16px;
+}
+.bl-hero-label span { width: 6px; height: 6px; background: #f97316; border-radius: 50%; display: inline-block; animation: bl-pulse 1.6s ease-in-out infinite; }
+@keyframes bl-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+
+.bl-hero-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 800;
+  color: #111827; line-height: 1.15; margin: 0 0 16px;
+}
+.bl-hero-title em { font-style: italic; color: #f97316; }
+.bl-hero-sub {
+  font-family: '', ;
+  font-size: 1.05rem; color: #6b7280; line-height: 1.7;
+  max-width: 500px; margin: 0 0 32px;
+}
+
+/* search bar */
+.bl-search-wrap {
+  display: flex; align-items: center; gap: 0;
+  background: #fff; border: 2px solid #f3f4f6;
+  border-radius: 14px; overflow: hidden;
+  max-width: 440px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.bl-search-wrap:focus-within {
+  border-color: #f97316;
+  box-shadow: 0 0 0 4px rgba(249,115,22,0.1);
+}
+.bl-search-icon { padding: 0 14px; color: #9ca3af; flex-shrink: 0; }
+.bl-search-input {
+  flex: 1; border: none; outline: none;
+  font-family: '', ; font-size: 0.95rem;
+  color: #111827; padding: 13px 0;
+  background: transparent;
+}
+.bl-search-input::placeholder { color: #9ca3af; }
+.bl-search-btn {
+  background: #f97316; color: #fff; border: none; cursor: pointer;
+  padding: 13px 20px; font-family: '', ;
+  font-size: 0.9rem; font-weight: 600;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.bl-search-btn:hover { background: #ea580c; }
+
+/* filter pills */
+.bl-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.bl-pill {
+  font-family: '', ; font-size: 0.82rem; font-weight: 500;
+  padding: 7px 18px; border-radius: 100px; cursor: pointer;
+  border: 1.5px solid #e5e7eb; color: #6b7280; background: #fff;
+  transition: all 0.18s;
+}
+.bl-pill:hover { border-color: #f97316; color: #f97316; }
+.bl-pill.active { background: #f97316; border-color: #f97316; color: #fff; }
+
+/* featured blog */
+.bl-featured {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; border-radius: 20px; overflow: hidden;
+  background: #fff;
+  border: 1.5px solid #f3f4f6;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.07);
+  transition: box-shadow 0.25s, transform 0.25s;
+  margin-bottom: 72px;
+}
+.bl-featured:hover { box-shadow: 0 20px 60px rgba(249,115,22,0.12); transform: translateY(-4px); }
+@media(max-width:768px){ .bl-featured { grid-template-columns: 1fr; } }
+
+.bl-featured-img-wrap {
+  position: relative; overflow: hidden;
+  min-height: 360px;
+}
+.bl-featured-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.bl-featured:hover .bl-featured-img { transform: scale(1.04); }
+.bl-featured-badge {
+  position: absolute; top: 16px; left: 16px;
+  background: #f97316; color: #fff;
+  font-family: '', ; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 5px 12px; border-radius: 100px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.bl-featured-body {
+  padding: 40px 44px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.bl-featured-cat {
+  font-family: '', ; font-size: 0.75rem; font-weight: 600;
+  color: #f97316; text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.bl-featured-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 800;
+  color: #111827; line-height: 1.25;
+  margin: 0 0 14px;
+  text-decoration: none; display: block;
+  transition: color 0.2s;
+}
+.bl-featured-title:hover { color: #f97316; }
+.bl-featured-desc {
+  font-family: '', ; font-size: 0.97rem; color: #6b7280;
+  line-height: 1.75; margin: 0 0 24px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bl-featured-meta {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  font-family: '', ; font-size: 0.82rem; color: #9ca3af;
+  margin-bottom: 28px;
+}
+.bl-featured-meta span { display: flex; align-items: center; gap: 5px; }
+.bl-featured-meta svg { width: 13px; height: 13px; }
+
+.bl-read-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #f97316; color: #fff;
+  font-family: '', ; font-size: 0.9rem; font-weight: 600;
+  padding: 12px 24px; border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  align-self: flex-start;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+}
+.bl-read-btn:hover { background: #ea580c; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(249,115,22,0.35); }
+.bl-read-btn svg { width: 16px; height: 16px; transition: transform 0.2s; }
+.bl-read-btn:hover svg { transform: translateX(3px); }
+
+/* section heading */
+.bl-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 32px; padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+  position: relative;
+}
+.bl-section-head::after {
+  content: '';
+  position: absolute; bottom: -2px; left: 0;
+  width: 64px; height: 2px; background: #f97316;
+}
+.bl-section-head h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.8rem; font-weight: 800; color: #111827; margin: 0;
+}
+.bl-section-head a {
+  font-family: '', ; font-size: 0.88rem; font-weight: 600;
+  color: #f97316; text-decoration: none;
+  display: flex; align-items: center; gap: 4px;
+}
+.bl-section-head a:hover { color: #ea580c; }
+
+/* blog cards grid */
+.bl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+@media(max-width:1024px){ .bl-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:640px){ .bl-grid { grid-template-columns: 1fr; } }
+
+.bl-card {
+  background: #fff; border-radius: 16px;
+  border: 1.5px solid #f3f4f6;
+  overflow: hidden;
+  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+  display: flex; flex-direction: column;
+}
+.bl-card:hover {
+  box-shadow: 0 12px 40px rgba(249,115,22,0.1);
+  transform: translateY(-5px);
+  border-color: rgba(249,115,22,0.3);
+}
+.bl-card-img-wrap { overflow: hidden; position: relative; }
+.bl-card-img {
+  width: 100%; height: 200px; object-fit: cover;
+  transition: transform 0.45s ease;
+  display: block;
+}
+.bl-card:hover .bl-card-img { transform: scale(1.06); }
+.bl-card-cat-badge {
+  position: absolute; top: 12px; left: 12px;
+  font-family: '', ; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  background: rgba(255,255,255,0.92);
+  color: #f97316; padding: 4px 10px; border-radius: 100px;
+  backdrop-filter: blur(4px);
+}
+.bl-card-body { padding: 22px 22px 20px; flex: 1; display: flex; flex-direction: column; }
+.bl-card-meta {
+  display: flex; align-items: center; gap: 10px;
+  font-family: '', ; font-size: 0.77rem; color: #9ca3af;
+  margin-bottom: 10px;
+}
+.bl-card-meta svg { width: 11px; height: 11px; }
+.bl-card-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem; font-weight: 700; color: #111827;
+  line-height: 1.35; margin: 0 0 10px;
+  text-decoration: none; display: block;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  transition: color 0.18s;
+}
+.bl-card-title:hover { color: #f97316; }
+.bl-card-desc {
+  font-family: '', ; font-size: 0.875rem; color: #6b7280;
+  line-height: 1.65; margin: 0 0 16px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  flex: 1;
+}
+.bl-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 14px; border-top: 1px solid #f9fafb;
+}
+.bl-card-author { font-family: '', ; font-size: 0.8rem; color: #9ca3af; }
+.bl-card-link {
+  font-family: '', ; font-size: 0.82rem; font-weight: 600;
+  color: #f97316; text-decoration: none;
+  display: flex; align-items: center; gap: 4px;
+  transition: gap 0.18s;
+}
+.bl-card-link:hover { gap: 7px; }
+.bl-card-link svg { width: 13px; height: 13px; }
+
+/* skeleton */
+.bl-skeleton { background: linear-gradient(90deg, #f3f4f6 25%, #e9eaeb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: bl-shimmer 1.4s infinite; border-radius: 8px; }
+@keyframes bl-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* pagination */
+.bl-pag { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 56px; }
+.bl-pag-btn {
+  font-family: '', ; font-size: 0.88rem; font-weight: 500;
+  padding: 9px 20px; border-radius: 10px;
+  border: 1.5px solid #e5e7eb; background: #fff; color: #374151;
+  cursor: pointer; transition: all 0.18s;
+}
+.bl-pag-btn:hover:not(:disabled) { border-color: #f97316; color: #f97316; }
+.bl-pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.bl-pag-info { font-family: '', ; font-size: 0.88rem; color: #6b7280; padding: 0 8px; }
+
+/* empty / error */
+.bl-empty { text-align: center; padding: 80px 0; }
+.bl-empty svg { width: 64px; height: 64px; color: #e5e7eb; margin: 0 auto 20px; display: block; }
+.bl-empty p { font-family: '', ; color: #9ca3af; font-size: 1rem; }
+`;
+
+if (typeof document !== 'undefined' && !document.getElementById('bl-styles')) {
+  const el = document.createElement('style');
+  el.id = 'bl-styles'; el.textContent = BLOGLIST_STYLES;
+  document.head.appendChild(el);
+}
+
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+const CalIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+);
+const EyeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+const ArrowIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+  </svg>
+);
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:16,height:16}}>
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+);
+
+const CATEGORIES = ['All', 'Blog', 'Guide', 'News', 'Career'];
+
 const CardSkeleton = () => (
-  <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
-    <div className="h-48 bg-gray-200" />
-    <div className="p-5 space-y-3">
-      <div className="h-3 bg-gray-200 rounded-full w-1/3" />
-      <div className="h-4 bg-gray-200 rounded-full w-full" />
-      <div className="h-4 bg-gray-200 rounded-full w-3/4" />
-      <div className="h-3 bg-gray-200 rounded-full w-1/2 mt-4" />
+  <div className="bl-card" style={{padding: 0}}>
+    <div className="bl-skeleton" style={{height:200, borderRadius:'16px 16px 0 0'}} />
+    <div style={{padding: '22px'}}>
+      <div className="bl-skeleton" style={{height:12, width:'40%', marginBottom:10}} />
+      <div className="bl-skeleton" style={{height:18, marginBottom:8}} />
+      <div className="bl-skeleton" style={{height:18, width:'75%', marginBottom:16}} />
+      <div className="bl-skeleton" style={{height:12, width:'60%'}} />
     </div>
   </div>
 );
 
-// ── Category pill ──────────────────────────────────────────────────────
-const CategoryPill = ({ label, active, onClick, color = 'orange' }) => {
-  const activeClasses = color === 'green'
-    ? 'bg-green-500 text-white shadow-green-200 shadow-md'
-    : 'bg-orange-500 text-white shadow-orange-200 shadow-md';
-  return (
-    <button
-      onClick={onClick}
-      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-        active ? activeClasses : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-600'
-      }`}
-    >
-      {label}
-    </button>
-  );
-};
-
-// ── Format date helper ─────────────────────────────────────────────────
-const formatDate = (dateString) => {
-  if (!dateString) return 'Recent';
-  return new Date(dateString).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short', year: 'numeric'
-  });
-};
-
-// ── Read-time estimate ─────────────────────────────────────────────────
-const readTime = (content = '') => {
-  const words = content?.replace(/<[^>]*>/g, '').split(/\s+/).length || 0;
-  return Math.max(1, Math.round(words / 200));
-};
-
-// ── SEO-Friendly Image Component with Base64 Conversion ────────────────
-const OptimizedImage = ({ src, alt, className, sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw", width, height, loading = "lazy", onImageConverted }) => {
-  const [imageSrc, setImageSrc] = useState(src);
-  const [isBase64, setIsBase64] = useState(false);
-
-  useEffect(() => {
-    if (src && src.startsWith('http')) {
-      convertImageToBase64(src)
-        .then(base64 => {
-          setImageSrc(base64);
-          setIsBase64(true);
-          if (onImageConverted) onImageConverted(base64);
-        })
-        .catch(err => {
-          console.warn(`Base64 conversion failed for ${src}:`, err);
-          setImageSrc(blogImg);
-        });
-    } else if (!src) {
-      setImageSrc(blogImg);
-    }
-  }, [src, onImageConverted]);
-
-  return (
-    <img
-      src={imageSrc}
-      alt={alt || "Blog post image"}
-      className={className}
-      sizes={sizes}
-      width={width}
-      height={height}
-      loading={loading}
-      decoding="async"
-      onError={(e) => {
-        e.target.onerror = null;
-        e.target.src = blogImg;
-      }}
-    />
-  );
-};
-
-export default function BlogList() {
+const BlogList = () => {
   const [blogs, setBlogs] = useState([]);
+  const [featured, setFeatured] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0, hasNextPage: false });
   const [searchTerm, setSearchTerm] = useState('');
-  const [inputValue, setInputValue] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({});
-  const [categories, setCategories] = useState([]);
-  const navigate = useNavigate();
+  const [inputVal, setInputVal] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
-  const API_BASE = 'https://careermitra.tech/api';
-
-  const fetchBlogs = useCallback(async () => {
-    setLoading(true);
+  const fetchBlogs = async (page = 1, search = '', category = '') => {
+    setLoading(true); setError(null);
     try {
-      let url = `${API_BASE}/blogs?page=${currentPage}&limit=9`;
-      if (selectedCategory !== 'all') url += `&category=${encodeURIComponent(selectedCategory)}`;
-      if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
-
+      let url = `https://careermitra.tech/api/blogs?page=${page}&limit=9`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (category && category !== 'All') url += `&category=${encodeURIComponent(category)}`;
       const res = await fetch(url);
-      const result = await res.json();
+      const data = await res.json();
+      if (data.success) {
+        const allBlogs = data.data.blogs || [];
+        if (page === 1 && !search && !category) {
+          setFeatured(allBlogs[0] || null);
+          setBlogs(allBlogs.slice(1));
+        } else {
+          setFeatured(null);
+          setBlogs(allBlogs);
+        }
+        setPagination(data.data.pagination);
+      } else { setError(data.message || 'Failed to fetch blogs'); }
+    } catch { setError('Network error. Please try again.'); }
+    finally { setLoading(false); }
+  };
 
-      if (result.success && result.data) {
-        const list = result.data.blogs || [];
-        setBlogs(list);
-        setPagination(result.data.pagination || {});
-        const cats = [...new Set(list.map(b => b.category).filter(Boolean))];
-        setCategories(cats);
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
+  useEffect(() => { fetchBlogs(1, searchTerm, selectedCategory); }, [searchTerm, selectedCategory]);
+
+  const handleSearch = (e) => { e.preventDefault(); setSearchTerm(inputVal); };
+  const handlePageChange = (p) => {
+    if (p >= 1 && p <= pagination.totalPages) {
+      fetchBlogs(p, searchTerm, selectedCategory);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [currentPage, selectedCategory, searchTerm]);
-
-  useEffect(() => { fetchBlogs(); }, [fetchBlogs]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setSearchTerm(inputValue);
-    setCurrentPage(1);
-  };
-
-  const clearSearch = () => {
-    setInputValue('');
-    setSearchTerm('');
-    setCurrentPage(1);
-  };
-
-  const featuredBlog = blogs[0] || null;
-  const gridBlogs = blogs.slice(1);
-
-  const getPageNumbers = () => {
-    const total = pagination.totalPages || 1;
-    const cur = pagination.page || currentPage;
-    const delta = 2;
-    const range = [];
-    for (let i = Math.max(1, cur - delta); i <= Math.min(total, cur + delta); i++) {
-      range.push(i);
-    }
-    if (range[0] > 1) { range.unshift('...'); range.unshift(1); }
-    if (range[range.length - 1] < total) { range.push('...'); range.push(total); }
-    return range;
-  };
-
-  // Structured Data for SEO
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Blog",
-    "headline": "Career Insights & Government Job Updates",
-    "description": "Expert guidance, government job alerts, and exam strategies — everything you need to build your dream career.",
-    "url": window.location.href,
-    "mainEntity": blogs.map(blog => ({
-      "@type": "BlogPosting",
-      "headline": blog.title,
-      "description": blog.short_description,
-      "datePublished": blog.published_at,
-      "author": { "@type": "Person", "name": blog.author_name || "CareerMitra" }
-    }))
   };
 
   return (
-    <div className="bg-[#FAFAF8] min-h-screen font-sans">
-      {/* SEO Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
+    <>
+      <SEO
+        title="Blog | Career Mitra — Govt Jobs, Career Guides & More"
+        description="Latest govt jobs 2026, career guides, exam tips, and more from Career Mitra."
+        keywords="govt jobs 2026, career guide, exam tips, sarkari naukri"
+        url="https://www.careermitra.in/blogs"
+      />
+      <div className="bl-root" style={{background:'#fff', minHeight:'100vh'}}>
 
-      {/* HERO SECTION */}
-      <section className="relative bg-white overflow-hidden border-b border-gray-100">
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-orange-100 rounded-full -translate-x-1/2 -translate-y-1/2 opacity-40 blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-green-100 rounded-full translate-x-1/3 translate-y-1/3 opacity-40 blur-3xl" />
+      {/* ── HERO ── */}
+<section className="relative w-full min-h-[90vh] flex items-center justify-center px-4 overflow-hidden">
 
-        <div className="relative max-w-5xl mx-auto px-6 py-16 md:py-20 text-center">
-          <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
-            <HiSparkles size={14} />
-            Career Insights & Government Job Updates
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tight mb-5">
-            Your Path to<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-orange-400 to-green-500">
-              Career Success
-            </span>
-          </h1>
-          <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed">
-            Expert guidance, government job alerts, and exam strategies — everything you need to build your dream career.
-          </p>
+  {/* 🌈 Background Gradient */}
+  <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-orange-100" />
 
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative">
-            <div className="relative flex items-center bg-white border-2 border-gray-200 rounded-2xl shadow-sm focus-within:border-orange-400 focus-within:shadow-orange-100 focus-within:shadow-md transition-all duration-300">
-              <FaSearch className="absolute left-5 text-gray-400" size={16} />
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Search articles, topics, exams..."
-                className="flex-1 pl-12 pr-4 py-4 bg-transparent text-gray-700 placeholder-gray-400 text-sm focus:outline-none"
-                aria-label="Search blog posts"
-              />
-              {inputValue && (
-                <button type="button" onClick={clearSearch} className="p-2 mr-1 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Clear search">
-                  <FaTimes size={14} />
-                </button>
-              )}
-              <button type="submit" className="m-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl transition-colors">
-                Search
-              </button>
+  {/* 🔮 Floating Orbs */}
+  <div className="absolute inset-0 overflow-hidden">
+    
+    <div className="absolute w-72 h-72 bg-orange-300/30 rounded-full blur-3xl top-10 left-10 animate-pulse"></div>
+    
+    <div className="absolute w-96 h-96 bg-pink-300/20 rounded-full blur-3xl bottom-10 right-10 animate-[float_8s_ease-in-out_infinite]"></div>
+    
+    <div className="absolute w-64 h-64 bg-yellow-200/30 rounded-full blur-3xl top-1/2 left-1/3 animate-[float_10s_ease-in-out_infinite]"></div>
+
+  </div>
+
+  {/* ✨ Content */}
+  <div className="relative max-w-3xl w-full text-center z-10">
+
+    {/* Label */}
+    <div className="flex items-center justify-center gap-2 text-orange-500 font-medium mb-4">
+      <span className="w-6 h-[2px] bg-orange-500"></span>
+      Latest Articles & Guides
+    </div>
+
+    {/* Title */}
+    <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+      Your Career,<br />
+      <em className="text-orange-500 not-italic">Beautifully Guided</em>
+    </h1>
+
+    {/* Subtitle */}
+    <p className="text-gray-600 text-lg mb-8">
+      Insights, exam strategies, job alerts, and career guides — everything you need to land your dream government job.
+    </p>
+
+    {/* Search */}
+    <form onSubmit={handleSearch} className="flex items-center justify-center mb-6">
+      <div className="flex items-center w-full max-w-xl bg-white/80 backdrop-blur-md shadow-lg rounded-full overflow-hidden border border-white/40">
+        
+        <span className="px-3 text-gray-400">
+          <SearchIcon />
+        </span>
+
+        <input
+          className="flex-1 px-2 py-3 outline-none bg-transparent"
+          placeholder="Search articles, guides, topics…"
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+        />
+
+        <button
+          type="submit"
+          className="bg-orange-500 text-white px-6 py-3 hover:bg-orange-600 transition"
+        >
+          Search
+        </button>
+      </div>
+    </form>
+
+    {/* Filters */}
+    <div className="flex flex-wrap justify-center gap-3">
+      {CATEGORIES.map((cat) => (
+        <button
+          key={cat}
+          onClick={() =>
+            setSelectedCategory(cat === "All" ? "" : cat)
+          }
+          className={`px-4 py-2 rounded-full border transition ${
+            selectedCategory === (cat === "All" ? "" : cat)
+              ? "bg-orange-500 text-white border-orange-500"
+              : "bg-white/70 backdrop-blur text-gray-600 border-gray-300 hover:bg-gray-100"
+          }`}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+
+  </div>
+</section>
+
+        <div style={{maxWidth:1200, margin:'0 auto', padding:'0 24px 80px'}}>
+
+          {/* ── FEATURED ── */}
+          {featured && !loading && (
+            <div style={{marginBottom:0}}>
+              <div className="bl-section-head" style={{marginBottom:24}}>
+                <h2>Featured Story</h2>
+              </div>
+              <div className="bl-featured">
+                <div className="bl-featured-img-wrap">
+                  <img
+                    src={featured.featured_image}
+                    alt={featured.image_alt_text || featured.title}
+                    className="bl-featured-img"
+                    onError={e => { e.target.style.background='#f9fafb'; e.target.src=''; }}
+                  />
+                  <div className="bl-featured-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width:12,height:12}}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Featured
+                  </div>
+                </div>
+                <div className="bl-featured-body">
+                  <div className="bl-featured-cat">{featured.category || 'Article'}</div>
+                  <Link to={`/blog/${featured.slug}`} className="bl-featured-title">{featured.title}</Link>
+                  <p className="bl-featured-desc">{featured.short_description}</p>
+                  <div className="bl-featured-meta">
+                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>{featured.author_name || 'Career Mitra'}</span>
+                    <span><CalIcon />{fmtDate(featured.published_at || featured.createdAt)}</span>
+                    <span><EyeIcon />{(featured.views || 0).toLocaleString()} views</span>
+                  </div>
+                  <Link to={`/blog/${featured.slug}`} className="bl-read-btn">
+                    Read Full Article <ArrowIcon />
+                  </Link>
+                </div>
+              </div>
             </div>
-          </form>
+          )}
 
-          <div className="flex items-center justify-center gap-8 mt-10 text-sm text-gray-400">
-            <span className="flex items-center gap-1.5"><FaBookOpen size={13} className="text-orange-400" /> {blogs.length}+ Articles</span>
-            <span className="w-px h-4 bg-gray-200" />
-            <span className="flex items-center gap-1.5"><FaFire size={13} className="text-green-400" /> Updated Daily</span>
-            <span className="w-px h-4 bg-gray-200" />
-            <span className="flex items-center gap-1.5"><FaChartLine size={13} className="text-orange-400" /> Free to Read</span>
-          </div>
-        </div>
-      </section>
+          {/* spacing between featured & grid */}
+          {featured && !loading && <div style={{height:64}} />}
 
-      {/* CATEGORY FILTERS */}
-      <div className="sticky top-0 z-20 bg-[#FAFAF8]/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-            <CategoryPill label="All Posts" active={selectedCategory === 'all'} onClick={() => { setSelectedCategory('all'); setCurrentPage(1); }} />
-            {categories.map(cat => (
-              <CategoryPill key={cat} label={cat} active={selectedCategory === cat} onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }} color="green" />
-            ))}
+          {/* ── CARDS GRID ── */}
+          <div className="bl-section-head">
+            <h2>{searchTerm || selectedCategory ? 'Search Results' : 'All Articles'}</h2>
+            {pagination.total > 0 && (
+              <span style={{fontFamily:"'',", fontSize:'0.85rem', color:'#9ca3af'}}>
+                {pagination.total} articles
+              </span>
+            )}
           </div>
+
+          {loading ? (
+            <div className="bl-grid">
+              {[...Array(6)].map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          ) : error ? (
+            <div className="bl-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <p>{error}</p>
+              <button className="bl-pag-btn" style={{margin:'0 auto', display:'block'}} onClick={() => fetchBlogs(1, searchTerm, selectedCategory)}>Try Again</button>
+            </div>
+          ) : blogs.length === 0 && !featured ? (
+            <div className="bl-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 12h6m-3-3v6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+              <p>No articles found. Try a different search.</p>
+            </div>
+          ) : (
+            <>
+              <div className="bl-grid">
+                {blogs.map((blog) => (
+                  <article key={blog._id} className="bl-card">
+                    <div className="bl-card-img-wrap">
+                      <img
+                        src={blog.featured_image}
+                        alt={blog.image_alt_text || blog.title}
+                        className="bl-card-img"
+                        loading="lazy"
+                        onError={e => { e.target.parentNode.style.background='#f9fafb'; e.target.style.display='none'; }}
+                      />
+                      {blog.category && <span className="bl-card-cat-badge">{blog.category}</span>}
+                    </div>
+                    <div className="bl-card-body">
+                      <div className="bl-card-meta">
+                        <span style={{display:'flex',alignItems:'center',gap:4}}><CalIcon />{fmtDate(blog.published_at || blog.createdAt)}</span>
+                        <span style={{color:'#e5e7eb'}}>·</span>
+                        <span style={{display:'flex',alignItems:'center',gap:4}}><EyeIcon />{(blog.views||0).toLocaleString()}</span>
+                      </div>
+                      <Link to={`/blog/${blog.slug}`} className="bl-card-title">{blog.title}</Link>
+                      <p className="bl-card-desc">{blog.short_description}</p>
+                      <div className="bl-card-footer">
+                        <span className="bl-card-author">By {blog.author_name || 'Career Mitra'}</span>
+                        <Link to={`/blog/${blog.slug}`} className="bl-card-link">
+                          Read More <ArrowIcon />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="bl-pag">
+                  <button className="bl-pag-btn" disabled={pagination.page === 1} onClick={() => handlePageChange(pagination.page - 1)}>← Previous</button>
+                  <span className="bl-pag-info">Page {pagination.page} of {pagination.totalPages}</span>
+                  <button className="bl-pag-btn" disabled={!pagination.hasNextPage} onClick={() => handlePageChange(pagination.page + 1)}>Next →</button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-
-      {/* MAIN CONTENT */}
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        {loading && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 animate-pulse h-72" />
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array(6).fill(0).map((_, i) => <CardSkeleton key={i} />)}
-            </div>
-          </div>
-        )}
-
-        {!loading && blogs.length === 0 && (
-          <div className="text-center py-28">
-            <div className="w-20 h-20 bg-orange-50 border border-orange-100 rounded-3xl flex items-center justify-center mx-auto mb-5">
-              <FaBookOpen size={32} className="text-orange-400" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No articles found</h3>
-            <p className="text-gray-500 text-sm mb-5">Try different keywords or browse all categories</p>
-            <button onClick={clearSearch} className="px-6 py-2.5 bg-orange-500 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 transition-colors">
-              Clear Search
-            </button>
-          </div>
-        )}
-
-        {!loading && blogs.length > 0 && (
-          <div className="space-y-10">
-            {/* Featured Hero Card */}
-            {featuredBlog && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <FaFire className="text-orange-500" size={14} />
-                  <span className="text-xs font-bold text-orange-500 uppercase tracking-widest">Featured Post</span>
-                </div>
-                <Link to={`/blog/${featuredBlog.slug}`} className="group block">
-                  <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-500">
-                    <div className="grid lg:grid-cols-[1.2fr_1fr] gap-0">
-                      <div className="relative h-[55vh] lg:h-auto overflow-hidden bg-gray-100">
-                        <OptimizedImage
-                          src={featuredBlog.featured_image}
-                          alt={featuredBlog.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          width="800"
-                          height="600"
-                          loading="eager"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
-                        <div className="absolute top-5 left-5">
-                          <span className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-xl uppercase tracking-wide">
-                            {featuredBlog.category || 'Featured'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-8 lg:p-10 flex flex-col justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400 mb-5">
-                            <span className="flex items-center gap-1.5"><FaCalendarAlt size={11} className="text-orange-400" />{formatDate(featuredBlog.published_at)}</span>
-                            <span className="flex items-center gap-1.5"><FaClock size={11} className="text-green-400" />{readTime(featuredBlog.content)} min read</span>
-                            <span className="flex items-center gap-1.5"><FaEye size={11} className="text-orange-400" />{(featuredBlog.views || 0).toLocaleString()} views</span>
-                          </div>
-                          <h2 className="text-2xl lg:text-3xl font-black text-gray-900 leading-tight mb-4 group-hover:text-orange-600 transition-colors line-clamp-3">
-                            {featuredBlog.title}
-                          </h2>
-                          <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5">{featuredBlog.short_description}</p>
-                          {featuredBlog.tags?.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mb-6">
-                              {featuredBlog.tags.slice(0, 3).map((tag, i) => (
-                                <span key={i} className="text-xs px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-full font-medium">#{tag}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between pt-5 border-t border-gray-100">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
-                              {featuredBlog.author_name?.charAt(0)?.toUpperCase() || 'C'}
-                            </div>
-                            <div><p className="text-xs font-semibold text-gray-800">{featuredBlog.author_name || 'CareerMitra'}</p><p className="text-xs text-gray-400">Author</p></div>
-                          </div>
-                          <span className="flex items-center gap-2 text-orange-500 text-sm font-bold group-hover:gap-3 transition-all">Read Article <FaArrowRight size={13} /></span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
-
-            {/* Grid Section Header */}
-            {gridBlogs.length > 0 && (
-              <div className="flex items-center justify-between">
-                <div><h2 className="text-xl font-black text-gray-900">Latest Articles</h2><p className="text-sm text-gray-400 mt-0.5">Fresh insights for your career journey</p></div>
-                <span className="hidden md:flex items-center gap-1.5 text-xs text-gray-400 bg-white border border-gray-200 px-3 py-1.5 rounded-full"><FaFire size={11} className="text-orange-400" /> Trending this week</span>
-              </div>
-            )}
-
-            {/* Blog Grid */}
-            {gridBlogs.length > 0 && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {gridBlogs.map((blog, index) => (
-                  <Link key={blog._id} to={`/blog/${blog.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50/60 hover:-translate-y-1 transition-all duration-400 flex flex-col">
-                    <div className="relative h-48 overflow-hidden bg-gray-100 flex-shrink-0">
-                      <OptimizedImage src={blog.featured_image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" width="400" height="250" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
-                      <div className="absolute top-3 left-3"><span className="px-2.5 py-1 bg-white/95 text-orange-600 text-xs font-bold rounded-lg">{blog.category || 'Article'}</span></div>
-                      <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-white/90 text-xs bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm"><FaEye size={10} /> {(blog.views || 0).toLocaleString()}</span>
-                        <span className="flex items-center gap-1 text-white/90 text-xs bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm"><FaClock size={10} /> {readTime(blog.content)} min</span>
-                      </div>
-                    </div>
-                    <div className="p-5 flex flex-col flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{blog.author_name?.charAt(0)?.toUpperCase() || 'C'}</div>
-                        <span className="text-xs text-gray-500 font-medium">{blog.author_name || 'CareerMitra'}</span>
-                        <span className="text-gray-200">·</span>
-                        <span className="text-xs text-gray-400">{formatDate(blog.published_at)}</span>
-                      </div>
-                      <h3 className="text-base font-bold text-gray-900 leading-snug mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">{blog.title}</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed line-clamp-2 flex-1">{blog.short_description}</p>
-                      {blog.tags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">{blog.tags.slice(0, 2).map((tag, i) => (<span key={i} className="text-xs px-2 py-0.5 bg-gray-50 text-gray-500 border border-gray-100 rounded-full">#{tag}</span>))}</div>
-                      )}
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
-                        <span className="text-orange-500 text-xs font-bold flex items-center gap-1.5 group-hover:gap-2.5 transition-all">Read More <FaArrowRight size={11} /></span>
-                        <span className="text-xs text-gray-300">{formatDate(blog.published_at)}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {(pagination.totalPages || 1) > 1 && (
-              <div className="flex justify-center items-center gap-2 pt-4">
-                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={!pagination.hasPrevPage} className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all" aria-label="Previous page"><FaChevronLeft size={13} /></button>
-                {getPageNumbers().map((num, i) => num === '...' ? (<span key={`ellipsis-${i}`} className="w-10 h-10 flex items-center justify-center text-gray-400 text-sm">…</span>) : (
-                  <button key={num} onClick={() => setCurrentPage(num)} className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${(pagination.page || currentPage) === num ? 'bg-orange-500 text-white shadow-md shadow-orange-200' : 'border border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600'}`}>{num}</button>
-                ))}
-                <button onClick={() => setCurrentPage(p => p + 1)} disabled={!pagination.hasNextPage} className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:border-green-300 hover:text-green-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all" aria-label="Next page"><FaChevronRight size={13} /></button>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* NEWSLETTER SECTION */}
-      <section className="bg-white border-t border-gray-100 py-16 md:py-20">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <div className="w-14 h-14 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-5"><FaBell className="text-orange-500" size={22} /></div>
-          <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 leading-tight">Never Miss an Update</h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto text-sm leading-relaxed">Get the latest government job alerts, exam schedules, and career tips delivered straight to your inbox.</p>
-          <button onClick={() => navigate('/register')} className="px-7 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">Register Now</button>
-          <p className="text-xs text-gray-400 mt-4">No spam ever. Unsubscribe anytime.</p>
-        </div>
-      </section>
-    </div>
+    </>
   );
-}
+};
+
+export default BlogList;

@@ -12,12 +12,14 @@ const categories = [
   { id: 8, icon: "🏗️", name: "Central Ministries", shortDesc: "58 Ministries, 94+ Departments", description: "Government of India comprises 58 ministries and over 94 departments. Opportunities include scientists, trainers, administrators, and diverse roles across various organizations and institutes." },
 ];
 
+const WHATSAPP_NUMBER = "917794045533";
+
 export default function JobCategories() {
   const [hovered, setHovered] = useState(null);
 
   return (
     <section style={{
-      padding: "96px 0", position: "relative", overflow: "hidden",
+      padding: "36px 0", position: "relative", overflow: "hidden",
       background: "linear-gradient(135deg, #f9fafb 0%, #fff 50%, rgba(255,237,213,0.3) 100%)",
     }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 384, height: 384, background: "rgba(249,115,22,0.05)", borderRadius: "50%", filter: "blur(60px)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
@@ -30,7 +32,7 @@ export default function JobCategories() {
               display: "inline-flex", alignItems: "center", gap: 8,
               background: "#fff7ed", color: "#c2410c",
               padding: "6px 16px", borderRadius: 9999,
-              fontSize: 13, fontWeight: 600, marginBottom: 24,
+              fontSize: 13, fontWeight: 600, marginBottom: 14,
             }}>
               <span style={{ width: 8, height: 8, background: "#f97316", borderRadius: "50%", animation: "pulse 2s infinite" }} />
               Explore Your Future
@@ -102,10 +104,15 @@ export default function JobCategories() {
                       <div style={{ width: 40, height: 2, background: "linear-gradient(90deg, #f97316, #22c55e)", borderRadius: 9999, marginBottom: 10 }} />
                       <p style={{ color: "#d1d5db", fontSize: 13, lineHeight: 1.6 }}>{cat.description}</p>
                     </div>
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <a
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi Career Mitra team, I want to know more details about ${cat.name}.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", textDecoration: "none" }}
+                    >
                       <span style={{ fontSize: 11, color: "#9ca3af" }}>Want to know more details?</span>
                       <span style={{ color: "#fb923c", fontSize: 11 }}>↗</span>
-                    </div>
+                    </a>
                   </div>
                 </div>
               </div>

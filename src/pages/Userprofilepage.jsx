@@ -930,7 +930,7 @@ const UserProfilePage = () => {
         title="Student Dashboard  | Career Mitra"
         description="Access your personalized dashboard to explore govt jobs, internships, and career resources tailored for students. Stay updated with the latest opportunities and manage your profile effectively."
         keywords="student dashboard, govt jobs for students, internships for students, career resources, personalized job recommendations, profile management, career guidance"
-        url="https://www.sootradhara.in/user-dashboard"
+        url="https://www.careermitra.in/user-dashboard"
       />
       {/* ── HERO BANNER ── */}
       <div className="bg-gradient-to-r rounded-3xl from-orange-500 via-orange-600 to-amber-500 mt-25 relative overflow-hidden">

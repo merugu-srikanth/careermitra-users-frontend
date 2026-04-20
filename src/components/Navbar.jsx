@@ -27,17 +27,19 @@ const socials = [
 const navLinks = [
   { name: "HOME", path: "/", Icon: FaHome },
   { name: "ABOUT US", path: "/about-us", Icon: FaInfoCircle },
-  {
-    name: "JOBS",
-    dropdown: [
-      // { name: "SSC Jobs 2026", path: "/jobs/ssc" },
-      { name: "SSC Jobs 2026", path: "/coming-soon" },
-      { name: "Bank Jobs 2026", path: "/coming-soon" },
-      { name: "Railway Jobs 2026", path: "/coming-soon" },
-      { name: "Defence Jobs 2026", path: "/coming-soon" },
-      { name: "Police Jobs 2026", path: "/coming-soon" },
-    ],
-  },
+  { name: "JOBS", path: "/jobs", Icon: FaInfoCircle },
+
+  // {
+  //   name: "JOBS",
+  //   dropdown: [
+  //     // { name: "SSC Jobs 2026", path: "/jobs/ssc" },
+  //     { name: "SSC Jobs 2026", path: "/coming-soon" },
+  //     { name: "Bank Jobs 2026", path: "/coming-soon" },
+  //     { name: "Railway Jobs 2026", path: "/coming-soon" },
+  //     { name: "Defence Jobs 2026", path: "/coming-soon" },
+  //     { name: "Police Jobs 2026", path: "/coming-soon" },
+  //   ],
+  // },
   { name: "CONTACT US", path: "/contact-us", Icon: FaPhoneAlt },
   { name: "BLOGS", path: "/blogs", Icon: FaBlog },
 
@@ -120,6 +122,10 @@ export default function Navbar() {
   const isActive = (path) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
+  const visibleNavLinks = navLinks.filter(
+    (link) => link.name !== "JOBS" || !!token
+  );
+
   return (
     <>
       {/* ── TOP BAR (desktop only) ─────────────────────────────────────────── */}
@@ -149,19 +155,27 @@ export default function Navbar() {
           }`}
       >
         {/* top accent line */}
-        <div className="h-0.5 w-full bg-gradient-to-r from-orange-400 via-orange-500 to-green-500" />
+        <div className="h-0.5 w-full bg-linear-to-r from-orange-400 via-orange-500 to-green-500" />
 
-        <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between ">
-
+<div
+  className={` px-4 md:px-15 flex items-center justify-between transition-all duration-300 ${
+    scrolled ? "h-14" : "h-20"
+  }`}
+>
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src={Logo} alt="Career Mitra" className="w-auto h-20 object-contain py-1" />
-          </Link>
+<img
+  src={Logo}
+  alt="Career Mitra"
+  className={`w-auto object-contain transition-all duration-300 ${
+    scrolled ? "h-12" : "h-20"
+  }`}
+/>          </Link>
 
           {/* DESKTOP LINKS */}
           <div className="hidden md:flex items-center gap-1">
             <div className="hidden md:flex items-center gap-1">
-  {navLinks.map((link) => {
+  {visibleNavLinks.map((link) => {
     // 🔹 NORMAL LINK
     if (!link.dropdown) {
       return (
@@ -236,7 +250,7 @@ export default function Navbar() {
                     className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-all duration-200 shadow-sm shadow-orange-200"
                   >
                     <AvatarSVG size={32} />
-                    <span className="text-sm font-bold max-w-[100px] truncate">{displayName}</span>
+                    <span className="text-sm font-bold max-w-25 truncate">{displayName}</span>
                     <motion.span animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <FaChevronDown size={11} />
                     </motion.span>
@@ -252,7 +266,7 @@ export default function Navbar() {
                         className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
                       >
                         {/* profile header */}
-                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4">
+                        <div className="bg-linear-to-br from-orange-500 to-orange-600 p-4">
                           <div className="flex items-center gap-3">
                             <AvatarSVG size={52} />
                             <div className="flex-1 min-w-0">
@@ -338,7 +352,7 @@ export default function Navbar() {
               className="fixed top-0 right-0 h-full w-[85vw] max-w-sm bg-white z-50 md:hidden flex flex-col shadow-2xl"
             >
               {/* DRAWER HEADER */}
-              <div className="bg-gradient-to-br from-orange-600 to-orange-400 px-5 pt-1 pb-6 shrink-0">
+              <div className="bg-linear-to-br from-orange-600 to-orange-400 px-5 pt-1 pb-6 shrink-0">
                 <div className="flex items-center justify-between mb">
                   <img src={Logo} alt="Career Mitra" className="w-auto h-20 object-contain " />
                   <button
@@ -375,7 +389,7 @@ export default function Navbar() {
                 <div className="px-4 py-4">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-2">Navigation</p>
                   <nav className="space-y-1">
-                    {navLinks.map((link, i) => {
+                    {visibleNavLinks.map((link, i) => {
   if (!link.dropdown) {
     return (
       <Link

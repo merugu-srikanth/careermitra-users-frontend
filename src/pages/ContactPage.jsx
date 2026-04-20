@@ -34,7 +34,7 @@ const contactInfo = [
   {
     icon: <FaPhone size={16} />,
     label: "Call Us",
-    value: "+91 98765 43210",
+    value: "+91 7794045533",
     iconBg: "bg-green-50 border border-green-200",
     iconColor: "text-green-600",
     hoverBorder: "hover:border-green-300",
@@ -53,6 +53,7 @@ const contactInfo = [
 
 // ─── INTEREST TOPICS ──────────────────────────────────────────────────────────
 const topics = ["State PSC", "UPSC / IAS", "Banking", "Railways", "Defence", "Other"];
+const WHATSAPP_NUMBER = "917794045533";
 
 // ─── ANIMATION VARIANTS ───────────────────────────────────────────────────────
 const fadeUp = {
@@ -109,12 +110,14 @@ function FloatingBg() {
 }
 
 // ─── CONTACT CARD ─────────────────────────────────────────────────────────────
-function ContactCard({ item, index }) {
+function ContactCard({ item, onClick }) {
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={onClick}
       variants={fadeUp}
       whileHover={{ x: 6, transition: { duration: 0.2 } }}
-      className={`flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-100 cursor-default transition-colors duration-200 ${item.hoverBorder} ${item.hoverBg}`}
+      className={`w-full text-left flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-100 cursor-pointer transition-colors duration-200 ${item.hoverBorder} ${item.hoverBg}`}
     >
       <div className={`w-11 h-11 rounded-xl ${item.iconBg} flex items-center justify-center flex-shrink-0 ${item.iconColor}`}>
         {item.icon}
@@ -123,7 +126,7 @@ function ContactCard({ item, index }) {
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">{item.label}</p>
         <p className="text-sm font-semibold text-gray-800">{item.value}</p>
       </div>
-    </motion.div>
+    </motion.button>
   );
 }
 
@@ -171,18 +174,39 @@ function SuccessState({ name }) {
 export default function ContactSection() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [activeTopic, setActiveTopic] = useState("State PSC");
+  const [otherTopic, setOtherTopic] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(false);
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
+  const selectedTopic = activeTopic === "Other" ? (otherTopic.trim() || "Other") : activeTopic;
+
+  const openWhatsApp = (source = "Contact Form") => {
+    const text = [
+      `Hi Career Mitra Team,`,
+      "",
+      `Source: ${source}`,
+      `Name: ${form.name || "-"}`,
+      `Email: ${form.email || "-"}`,
+      `Phone: ${form.phone || "-"}`,
+      `Interested In: ${selectedTopic}`,
+      `Message: ${form.message || "-"}`,
+    ].join("\n");
+
+    const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    window.open(link, "_blank", "noopener,noreferrer");
+  };
+
   const handleSubmit = () => {
-    if (!form.name || !form.email || !form.message) {
+    if (!form.name || !form.email || !form.message || (activeTopic === "Other" && !otherTopic.trim())) {
       setError(true);
       setTimeout(() => setError(false), 2500);
       return;
     }
+
+    openWhatsApp("Contact Form");
     setSent(true);
   };
 
@@ -255,7 +279,7 @@ export default function ContactSection() {
               viewport={{ once: true }}
             >
               {contactInfo.map((item, i) => (
-                <ContactCard key={i} item={item} index={i} />
+                <ContactCard key={i} item={item} onClick={() => openWhatsApp(item.label)} />
               ))}
             </motion.div>
 
@@ -280,10 +304,12 @@ export default function ContactSection() {
               {[
                 { Icon: FaLinkedin, color: "hover:text-blue-600  hover:border-blue-300" },
                 { Icon: FaXTwitter, color: "hover:text-gray-900  hover:border-gray-400" },
-                { Icon: FaWhatsapp, color: "hover:text-green-600 hover:border-green-300" },
-              ].map(({ Icon, color }, i) => (
+                { Icon: FaWhatsapp, color: "hover:text-green-600 hover:border-green-300", onClick: () => openWhatsApp("WhatsApp Icon") },
+              ].map(({ Icon, color, onClick }, i) => (
                 <motion.button
                   key={i}
+                  type="button"
+                  onClick={onClick}
                   whileHover={{ scale: 1.15, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   className={`w-10 h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 transition-colors duration-200 ${color}`}
@@ -374,6 +400,21 @@ export default function ContactSection() {
                     </div>
                   </div>
 
+                  {activeTopic === "Other" && (
+                    <div className="mb-4">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
+                        Please Specify
+                      </label>
+                      <input
+                        type="text"
+                        value={otherTopic}
+                        onChange={(e) => setOtherTopic(e.target.value)}
+                        placeholder="Type your interest here..."
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-300 outline-none focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100 transition-all duration-200"
+                      />
+                    </div>
+                  )}
+
                   {/* message */}
                   <div className="mb-5">
                     <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
@@ -401,7 +442,7 @@ export default function ContactSection() {
                         exit={{ opacity: 0 }}
                         className="text-xs text-red-500 font-medium mb-3 text-center"
                       >
-                        Please fill in Name, Email and Message.
+                        Please fill in Name, Email, Message, and Other topic (if selected).
                       </motion.p>
                     )}
                   </AnimatePresence>

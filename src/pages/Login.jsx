@@ -39,7 +39,7 @@ export default function Login() {
           localStorage.removeItem("rememberedEmail");
         }
         toast.success("Login Successful! 🎉");
-        navigate("/user-dashboard");
+        navigate("/");
       }
     } catch (err) {
       setError("Login failed. Please try again.");
@@ -85,7 +85,7 @@ export default function Login() {
         setError("Invalid OTP. Please try again");
       } else {
         toast.success("OTP Login Successful! 🎉");
-        navigate("/user-dashboard");
+        navigate("/");
       }
     } catch (err) {
       setError("OTP verification failed. Please try again.");

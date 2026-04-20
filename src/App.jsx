@@ -21,6 +21,8 @@ import AboutPage from "./pages/AboutPage";
 import Contact from "./pages/ContactPage";
 import "./App.css"
 import ComingSoon from "./pages/Commingsoon/ComingSoon";
+import AllJobs from "./pages/Alljobs";
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
 
 export default function App() {
   return (
@@ -33,6 +35,7 @@ export default function App() {
 
         <Routes>
           <Route path="/" element={<Home />} />
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
@@ -42,6 +45,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Userprofilepage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs"
+            element={
+              <ProtectedRoute>
+               <AllJobs />
               </ProtectedRoute>
             }
           />
@@ -99,6 +110,7 @@ export default function App() {
           <Route path="/internship" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Internships Page</div>} />
           <Route path="/contact-us" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Contact Us Page</div>} />
         </Routes>
+        <FloatingWhatsApp />
         <Footer />
 
       </Router>
