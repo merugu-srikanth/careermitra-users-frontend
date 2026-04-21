@@ -19,14 +19,14 @@ const BD_STYLES = `
 /* hero image */
 .bd-hero-img-wrap { border-radius:20px;overflow:hidden;margin-bottom:32px;box-shadow:0 12px 48px rgba(0,0,0,0.1);position:relative; }
 .bd-hero-img { width:100%;height:auto;object-fit:cover;display:block; }
-.bd-hero-cat { position:absolute;top:16px;left:16px;background:#f97316;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:100px; }
+.bd-hero-cat { position:absolute;top:16px;left:16px;background:#f97316;color:#fff;font-family:'',;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:100px; }
 
 /* title */
 .bd-title { font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;color:#111827;line-height:1.2;margin:0 0 20px; }
 
 /* meta row */
 .bd-meta { display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 0;border-top:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6;margin-bottom:28px; }
-.bd-meta-item { display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#6b7280; }
+.bd-meta-item { display:flex;align-items:center;gap:6px;font-family:'',;font-size:0.82rem;color:#6b7280; }
 .bd-meta-item svg { width:13px;height:13px; }
 .bd-meta-item.author { color:#111827;font-weight:600; }
 
@@ -35,7 +35,7 @@ const BD_STYLES = `
   display:inline-flex;align-items:center;gap:8px;
   background:linear-gradient(135deg,#f97316,#ea580c);
   color:#fff;border:none;cursor:pointer;
-  font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;
+  font-family:'',;font-size:0.9rem;font-weight:600;
   padding:12px 22px;border-radius:12px;margin-bottom:32px;
   box-shadow:0 4px 16px rgba(249,115,22,0.3);
   transition:transform 0.18s,box-shadow 0.18s;
@@ -52,7 +52,7 @@ const BD_STYLES = `
   background:linear-gradient(135deg,#f97316,#ea580c);
   padding:12px 20px;display:flex;align-items:center;gap:10px;
 }
-.bd-summary-header span { font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:#fff;letter-spacing:0.03em; }
+.bd-summary-header span { font-family:'',;font-size:0.85rem;font-weight:700;color:#fff;letter-spacing:0.03em; }
 .bd-summary-header svg { width:16px;height:16px;color:#fff; }
 .bd-summary-dot { width:8px;height:8px;border-radius:50%;background:#fff;opacity:0.7;animation:bd-blink 1s step-end infinite; }
 @keyframes bd-blink { 0%,100%{opacity:0.7}50%{opacity:0} }
@@ -81,9 +81,9 @@ const BD_STYLES = `
 .bd-content h1 { font-family:'Playfair Display',Georgia,serif;font-size:1.9rem;font-weight:800;color:#111827;margin:2.4rem 0 1rem;padding-bottom:0.5rem;border-bottom:3px solid #f97316; }
 .bd-content h2 { font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:#111827;margin:2.8rem 0 1rem;position:relative;padding-left:1rem; }
 .bd-content h2::before { content:'';position:absolute;left:0;top:0.15em;bottom:0.15em;width:4px;border-radius:4px;background:linear-gradient(180deg,#f97316,#22c55e); }
-.bd-content h3 { font-family:'DM Sans',sans-serif;font-size:1.18rem;font-weight:600;color:#374151;margin:2rem 0 0.7rem;display:flex;align-items:center;gap:0.5rem; }
+.bd-content h3 { font-family:'',;font-size:1.18rem;font-weight:600;color:#374151;margin:2rem 0 0.7rem;display:flex;align-items:center;gap:0.5rem; }
 .bd-content h3::before { content:'';display:inline-block;width:20px;height:3px;background:#f97316;border-radius:3px;flex-shrink:0; }
-.bd-content h4 { font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;color:#f97316;margin:1.8rem 0 0.5rem;text-transform:uppercase;letter-spacing:0.08em; }
+.bd-content h4 { font-family:'',;font-size:0.82rem;font-weight:700;color:#f97316;margin:1.8rem 0 0.5rem;text-transform:uppercase;letter-spacing:0.08em; }
 .bd-content strong,.bd-content b { font-weight:700;color:#111827;background:linear-gradient(120deg,rgba(249,115,22,0.12),rgba(249,115,22,0.05));padding:0 4px 1px;border-radius:4px; }
 .bd-content em,.bd-content i { font-style:italic;color:#4b5563; }
 .bd-content ul { list-style:none;padding:1rem 1.2rem;margin:0.5rem 0 1.8rem;background:linear-gradient(135deg,#fff7ed,#f0fdf4);border-radius:14px;border:1px solid rgba(249,115,22,0.12); }
@@ -93,13 +93,13 @@ const BD_STYLES = `
 .bd-content ol { list-style:none;counter-reset:ol-c;padding:0;margin:0.5rem 0 1.8rem; }
 .bd-content ol li { counter-increment:ol-c;position:relative;padding:0.65rem 1rem 0.65rem 3.4rem;margin-bottom:6px;background:#fff;border-radius:10px;border:1px solid #f3f4f6;box-shadow:0 2px 6px rgba(0,0,0,0.04);color:#374151;transition:box-shadow 0.18s,transform 0.18s; }
 .bd-content ol li:hover { box-shadow:0 4px 14px rgba(249,115,22,0.1);transform:translateX(3px); }
-.bd-content ol li::before { content:counter(ol-c);position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);width:1.9rem;height:1.9rem;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(249,115,22,0.3); }
+.bd-content ol li::before { content:counter(ol-c);position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);width:1.9rem;height:1.9rem;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-family:'',;font-size:0.75rem;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(249,115,22,0.3); }
 .bd-content blockquote { margin:2.5rem 0;padding:1.6rem 1.8rem;background:#fff;border-left:5px solid #f97316;border-radius:0 14px 14px 0;box-shadow:0 6px 28px rgba(249,115,22,0.09);position:relative;overflow:hidden; }
 .bd-content blockquote::before { content:'201C';position:absolute;top:-0.6rem;left:0.8rem;font-family:'Playfair Display',Georgia,serif;font-size:6rem;line-height:1;color:rgba(249,115,22,0.1);pointer-events:none; }
 .bd-content blockquote p { margin:0;font-style:italic;font-size:1.1rem;line-height:1.7;color:#374151;position:relative;z-index:1;text-align:left; }
 .bd-content blockquote p::first-letter { all:unset; }
 .bd-content-table-wrap { overflow-x:auto;margin:2rem 0;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.07); }
-.bd-content table { width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:0.88rem;min-width:400px; }
+.bd-content table { width:100%;border-collapse:collapse;font-family:'',;font-size:0.88rem;min-width:400px; }
 .bd-content thead tr { background:linear-gradient(135deg,#f97316,#ea580c); }
 .bd-content th { padding:0.85rem 1rem;color:#fff;font-weight:600;text-align:left;letter-spacing:0.04em;font-size:0.8rem;text-transform:uppercase; }
 .bd-content tbody tr:nth-child(odd) { background:#fff; }
@@ -117,15 +117,15 @@ const BD_STYLES = `
 
 /* tags */
 .bd-tags { display:flex;flex-wrap:wrap;gap:8px;margin:28px 0; }
-.bd-tag { font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:500;color:#6b7280;background:#f3f4f6;padding:6px 14px;border-radius:100px;transition:all 0.18s;cursor:pointer;text-decoration:none; }
+.bd-tag { font-family:'',;font-size:0.8rem;font-weight:500;color:#6b7280;background:#f3f4f6;padding:6px 14px;border-radius:100px;transition:all 0.18s;cursor:pointer;text-decoration:none; }
 .bd-tag:hover { background:#fff7ed;color:#f97316;border-color:#f97316; }
 
 /* share */
 .bd-share { display:flex;align-items:center;gap:10px;padding:20px 0;border-top:1px solid #f3f4f6;margin-top:16px; }
-.bd-share-label { font-family:'DM Sans',sans-serif;font-size:0.85rem;color:#9ca3af;margin-right:4px; }
+.bd-share-label { font-family:'',;font-size:0.85rem;color:#9ca3af;margin-right:4px; }
 .bd-share-btn { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;color:#fff;transition:transform 0.18s,opacity 0.18s; }
 .bd-share-btn:hover { transform:scale(1.12);opacity:0.9; }
-.bd-share-copy { font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;color:#22c55e;margin-left:4px; }
+.bd-share-copy { font-family:'',;font-size:0.8rem;font-weight:600;color:#22c55e;margin-left:4px; }
 
 /* ── SIDEBAR ── */
 .bd-sidebar { position:sticky;top:88px; }
@@ -138,7 +138,7 @@ const BD_STYLES = `
 }
 .bd-sidebar-head {
   padding:12px 18px;display:flex;align-items:center;gap:8px;
-  font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;
+  font-family:'',;font-size:0.82rem;font-weight:700;
   letter-spacing:0.04em;text-transform:uppercase;
 }
 .bd-sidebar-head svg { width:14px;height:14px; }
@@ -152,15 +152,15 @@ const BD_STYLES = `
   width:64px;height:64px;border-radius:50%;
   background:linear-gradient(135deg,#f97316,#ea580c);
   display:flex;align-items:center;justify-content:center;
-  font-family:'DM Sans',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;
+  font-family:'',;font-size:1.4rem;font-weight:700;color:#fff;
   margin:0 auto 12px;
 }
 .bd-author-name { font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;font-weight:700;color:#111827;text-align:center;margin:0 0 4px; }
-.bd-author-role { font-family:'DM Sans',sans-serif;font-size:0.8rem;color:#9ca3af;text-align:center;margin:0 0 14px; }
+.bd-author-role { font-family:'',;font-size:0.8rem;color:#9ca3af;text-align:center;margin:0 0 14px; }
 .bd-author-stats { display:flex;justify-content:center;gap:20px; }
 .bd-author-stat { text-align:center; }
-.bd-author-stat strong { display:block;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;color:#111827; }
-.bd-author-stat span { font-family:'DM Sans',sans-serif;font-size:0.72rem;color:#9ca3af; }
+.bd-author-stat strong { display:block;font-family:'',;font-size:1rem;font-weight:700;color:#111827; }
+.bd-author-stat span { font-family:'',;font-size:0.72rem;color:#9ca3af; }
 
 /* related mini cards */
 .bd-related-item { display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f9fafb;text-decoration:none; }
@@ -168,31 +168,31 @@ const BD_STYLES = `
 .bd-related-item:first-child { padding-top:0; }
 .bd-related-img { width:60px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0; }
 .bd-related-img-placeholder { width:60px;height:60px;border-radius:10px;background:#f3f4f6;flex-shrink:0; }
-.bd-related-title { font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;color:#111827;line-height:1.4;margin:0 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color 0.18s; }
+.bd-related-title { font-family:'',;font-size:0.82rem;font-weight:600;color:#111827;line-height:1.4;margin:0 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color 0.18s; }
 .bd-related-item:hover .bd-related-title { color:#f97316; }
-.bd-related-date { font-family:'DM Sans',sans-serif;font-size:0.73rem;color:#9ca3af; }
+.bd-related-date { font-family:'',;font-size:0.73rem;color:#9ca3af; }
 
 /* sidebar tags */
 .bd-sidebar-tags { display:flex;flex-wrap:wrap;gap:7px;padding:14px 16px; }
-.bd-sidebar-tag { font-family:'DM Sans',sans-serif;font-size:0.77rem;font-weight:500;background:#f9fafb;color:#6b7280;padding:5px 12px;border-radius:100px;text-decoration:none;transition:all 0.18s;border:1px solid #f3f4f6; }
+.bd-sidebar-tag { font-family:'',;font-size:0.77rem;font-weight:500;background:#f9fafb;color:#6b7280;padding:5px 12px;border-radius:100px;text-decoration:none;transition:all 0.18s;border:1px solid #f3f4f6; }
 .bd-sidebar-tag:hover { background:#fff7ed;color:#f97316;border-color:rgba(249,115,22,0.25); }
 
 /* alert box */
 .bd-alert { background:linear-gradient(135deg,#111827,#1f2937);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px; }
 .bd-alert-icon { font-size:1.8rem;margin-bottom:8px; }
-.bd-alert-title { font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:700;color:#fff;margin:0 0 4px; }
-.bd-alert-sub { font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#9ca3af;margin:0 0 14px; }
-.bd-alert-btn { display:block;background:#f97316;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;padding:10px;border-radius:10px;text-decoration:none;transition:background 0.18s; }
+.bd-alert-title { font-family:'',;font-size:0.9rem;font-weight:700;color:#fff;margin:0 0 4px; }
+.bd-alert-sub { font-family:'',;font-size:0.78rem;color:#9ca3af;margin:0 0 14px; }
+.bd-alert-btn { display:block;background:#f97316;color:#fff;font-family:'',;font-size:0.85rem;font-weight:600;padding:10px;border-radius:10px;text-decoration:none;transition:background 0.18s; }
 .bd-alert-btn:hover { background:#ea580c; }
 
 /* breadcrumb */
-.bd-crumb { display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#9ca3af;padding:20px 0 28px; }
+.bd-crumb { display:flex;align-items:center;gap:6px;font-family:'',;font-size:0.82rem;color:#9ca3af;padding:20px 0 28px; }
 .bd-crumb a { color:#9ca3af;text-decoration:none;transition:color 0.18s; }
 .bd-crumb a:hover { color:#f97316; }
 .bd-crumb svg { width:10px;height:10px; }
 
 /* back btn */
-.bd-back { display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;color:#f97316;text-decoration:none;background:#fff7ed;padding:9px 16px;border-radius:10px;transition:all 0.18s;margin-bottom:20px; }
+.bd-back { display:inline-flex;align-items:center;gap:7px;font-family:'',;font-size:0.85rem;font-weight:600;color:#f97316;text-decoration:none;background:#fff7ed;padding:9px 16px;border-radius:10px;transition:all 0.18s;margin-bottom:20px; }
 .bd-back:hover { background:#ffedd5; }
 .bd-back svg { width:13px;height:13px; }
 `;
@@ -245,6 +245,14 @@ const readTime = (html) => {
 };
 
 const getInitials = (name) => (name || 'CM').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+const slugify = (value = '') =>
+  String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 
 /* ── Main Component ───────────────────────────────────────────────────────── */
 const BlogDetail = () => {
@@ -338,10 +346,13 @@ const BlogDetail = () => {
   if (error || !blog) return (
     <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{ fontSize: '4rem', fontWeight: 800, color: '#f3f4f6', fontFamily: "'Playfair Display',serif" }}>404</div>
-      <p style={{ fontFamily: "'DM Sans',sans-serif", color: '#6b7280', marginBottom: 24 }}>{error || 'Blog not found'}</p>
-      <Link to="/blogs" style={{ background: '#f97316', color: '#fff', padding: '12px 24px', borderRadius: 12, textDecoration: 'none', fontFamily: "'DM Sans',sans-serif", fontWeight: 600 }}>Back to Blogs</Link>
+      <p style={{  color: '#6b7280', marginBottom: 24 }}>{error || 'Blog not found'}</p>
+      <Link to="/blogs" style={{ background: '#f97316', color: '#fff', padding: '12px 24px', borderRadius: 12, textDecoration: 'none',  fontWeight: 600 }}>Back to Blogs</Link>
     </div>
   );
+
+  const authorName = blog.author?.author_name || blog.author_name || 'Career Mitra';
+  const primaryCategory = blog.categories?.[0]?.name || blog.category || 'General';
 
   return (
     <>
@@ -364,7 +375,7 @@ const BlogDetail = () => {
             <ChevronRight />
             <Link to="/blogs">Blog</Link>
             <ChevronRight />
-            <span style={{ color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{blog.title}</span>
+            <span style={{ color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{primaryCategory}</span>
           </nav>
 
           {/* 70/30 Layout */}
@@ -379,15 +390,29 @@ const BlogDetail = () => {
                 <img src={blog.featured_image} alt={blog.image_alt_text || blog.title}
                   className="bd-hero-img" loading="eager"
                   onError={e => { e.target.parentNode.style.background = '#f9fafb'; e.target.style.display = 'none'; }} />
-                {blog.category && <span className="bd-hero-cat">{blog.category}</span>}
+                {primaryCategory && <span className="bd-hero-cat">{primaryCategory}</span>}
               </div>
 
               {/* Title */}
               <h1 className="bd-title">{blog.title}</h1>
+                 {/* Short description callout */}
+              {blog.short_description && (
+                <div className="bd-callout">
+                  <div className="bd-callout-bar" />
+                  <div className="bd-callout-inner">
+                    <p>"{blog.short_description}"</p>
+                  </div>
+                </div>
+              )}
 
               {/* Meta */}
               <div className="bd-meta">
-                <div className="bd-meta-item author"><UserIcon /> {blog.author_name || 'Career Mitra'}</div>
+                <div className="bd-meta-item author">
+                  <UserIcon />
+                  <Link to={`/author/${slugify(authorName)}`} style={{ color: '#111827', textDecoration: 'none' }}>
+                    {authorName}
+                  </Link>
+                </div>
                 <div className="bd-meta-item"><CalIcon /> {fmtDate(blog.published_at || blog.createdAt)}</div>
                 <div className="bd-meta-item"><EyeIcon /> {(blog.views || 0).toLocaleString()} views</div>
                 <div className="bd-meta-item"><ClockIcon /> {readTime(blog.content)} min read</div>
@@ -416,15 +441,7 @@ const BlogDetail = () => {
                 </div>
               )}
 
-              {/* Short description callout */}
-              {blog.short_description && (
-                <div className="bd-callout">
-                  <div className="bd-callout-bar" />
-                  <div className="bd-callout-inner">
-                    <p>"{blog.short_description}"</p>
-                  </div>
-                </div>
-              )}
+           
 
               {/* ── MAIN CONTENT ── */}
               <div className="bd-content"
@@ -433,7 +450,7 @@ const BlogDetail = () => {
               {/* Tags */}
               {blog.tags && blog.tags.length > 0 && (
                 <div>
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, marginTop: 32 }}>Tags</div>
+                  <div style={{  fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, marginTop: 32 }}>Tags</div>
                   <div className="bd-tags">
                     {blog.tags.map((tag, i) => <span key={i} className="bd-tag">#{tag}</span>)}
                   </div>
@@ -441,7 +458,7 @@ const BlogDetail = () => {
               )}
 
               {/* Share */}
-              <div className="bd-share">
+              {/* <div className="bd-share">
                 <span className="bd-share-label">Share:</span>
                 <button className="bd-share-btn" style={{ background: '#1877F2' }} aria-label="Facebook"
                   onClick={() => window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}>
@@ -459,7 +476,7 @@ const BlogDetail = () => {
                   {copied ? <CheckIcon /> : <LinkIcon />}
                 </button>
                 {copied && <span className="bd-share-copy">Copied!</span>}
-              </div>
+              </div> */}
             </article>
 
             {/* ── RIGHT: Sticky Sidebar ── */}
@@ -531,8 +548,8 @@ const BlogDetail = () => {
                     { label: 'Category', val: blog.category || 'General' },
                   ].map(({ label, val }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f9fafb' }}>
-                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.8rem', color: '#9ca3af' }}>{label}</span>
-                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>{val}</span>
+                      <span style={{  fontSize: '0.8rem', color: '#9ca3af' }}>{label}</span>
+                      <span style={{  fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>{val}</span>
                     </div>
                   ))}
                 </div>

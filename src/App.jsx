@@ -23,6 +23,7 @@ import "./App.css"
 import ComingSoon from "./pages/Commingsoon/ComingSoon";
 import AllJobs from "./pages/Alljobs";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
+import AuthorProfile from "./pages/AuthorProfile";
 
 export default function App() {
   return (
@@ -86,6 +87,8 @@ export default function App() {
                 <BlogDetail />
             }
           />
+              <Route path="/author/:slug" element={<AuthorProfile />} />
+
           <Route
             path="/about-us"
             element={
