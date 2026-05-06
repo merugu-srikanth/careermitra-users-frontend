@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
@@ -22,8 +22,11 @@ import Contact from "./pages/ContactPage";
 import "./App.css"
 import ComingSoon from "./pages/Commingsoon/ComingSoon";
 import AllJobs from "./pages/Alljobs";
-import FloatingWhatsApp from "./components/FloatingWhatsApp";
+import AIChatBot from "./components/AIChatBot";
 import AuthorProfile from "./pages/AuthorProfile";
+import InternshipGuide from "./pages/Internshipguide";
+import CareerGuide from "./pages/CareerGuide";
+import NotFoundPage from "./components/NotFoundPage";
 
 export default function App() {
   return (
@@ -32,11 +35,11 @@ export default function App() {
       <ToastContainer />
       <Router>
         <ScrollToTop />
-        <Navbar  />
+        <Navbar />
 
         <Routes>
           <Route path="/" element={<Home />} />
-          
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
@@ -53,7 +56,7 @@ export default function App() {
             path="/jobs"
             element={
               <ProtectedRoute>
-               <AllJobs />
+                <AllJobs />
               </ProtectedRoute>
             }
           />
@@ -78,42 +81,51 @@ export default function App() {
           <Route
             path="/blogs"
             element={
-                <BlogList />
+              <BlogList />
             }
           />
           <Route
             path="/blog/:slug"
             element={
-                <BlogDetail />
+              <BlogDetail />
             }
           />
-              <Route path="/author/:slug" element={<AuthorProfile />} />
+          <Route path="/author/:slug" element={<AuthorProfile />} />
 
           <Route
             path="/about-us"
             element={
-                <AboutPage />
+              <AboutPage />
+            }
+          />
+          <Route
+            path="/internship-guide"
+            element={
+              <InternshipGuide />
+            }
+          />
+          <Route
+            path="/career-guide"
+            element={
+              <CareerGuide />
             }
           />
           <Route
             path="/contact-us"
             element={
-                <Contact />
+              <Contact />
             }
           />
           <Route
             path="/coming-soon"
             element={
-                <ComingSoon />
+              <ComingSoon />
             }
           />
-          {/* <Route path="/user" element={<ProfileLayout />} /> */}
-          <Route path="/latest-govt-jobs" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Latest Govt Jobs Page</div>} />
-          <Route path="/profile" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Profile Page</div>} />
-          <Route path="/internship" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Internships Page</div>} />
-          <Route path="/contact-us" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold text-gray-700 pt-20">Contact Us Page</div>} />
+          <Route path="*" element={<NotFoundPage />} />
+
         </Routes>
-        <FloatingWhatsApp />
+        {/* <AIChatBot /> */}
         <Footer />
 
       </Router>

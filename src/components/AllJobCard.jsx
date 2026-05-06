@@ -36,7 +36,14 @@ const PostsIcon = () => (
   </svg>
 );
 
-export default function AllJobCard({ title, org, lastDate, postedDate, location, applyLink, noOfPosts, age, qualifications, category }) {
+const normalizeExternalUrl = (value) => {
+  if (!value || typeof value !== "string") return "";
+  const v = value.trim();
+  if (!v) return "";
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+};
+
+export default function AllJobCard({ title, org, lastDate, postedDate, location, applyLink, notificationUrl, noOfPosts, age, qualifications, category }) {
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
@@ -46,11 +53,20 @@ export default function AllJobCard({ title, org, lastDate, postedDate, location,
   const handleApply = (e) => {
     e.preventDefault();
     if (isLoggedIn) {
-      const url = applyLink?.startsWith("http") ? applyLink : `https://${applyLink}`;
+      const url = normalizeExternalUrl(applyLink);
+      if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
     } else {
       navigate("/register");
     }
+  };
+
+  const handleNotification = (e) => {
+    e.preventDefault();
+    if (isExpired || !notificationUrl) return;
+    const url = normalizeExternalUrl(notificationUrl);
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -111,17 +127,31 @@ export default function AllJobCard({ title, org, lastDate, postedDate, location,
               </span>
             </div>
           </div>
-          <button
-            onClick={handleApply}
-            disabled={isExpired}
-            className={`text-xs font-extrabold px-4 py-2 rounded-xl transition-all duration-200 shrink-0
-              ${isExpired
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-orange-500 hover:bg-orange-600 active:scale-95 text-white shadow-sm hover:shadow-md cursor-pointer"
-              }`}
-          >
-            {isExpired ? "Closed" : isLoggedIn ? "Apply Now →" : "Register & Apply"}
-          </button>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleNotification}
+              disabled={isExpired || !notificationUrl}
+              className={`text-xs font-extrabold px-3 py-2 rounded-xl transition-all duration-200 shrink-0
+                ${isExpired || !notificationUrl
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600 active:scale-95 text-white shadow-sm hover:shadow-md cursor-pointer"
+                }`}
+            >
+              Notification
+            </button>
+            <button
+              onClick={handleApply}
+              disabled={isExpired}
+              className={`text-xs font-extrabold px-4 py-2 rounded-xl transition-all duration-200 shrink-0
+                ${isExpired
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-orange-500 hover:bg-orange-600 active:scale-95 text-white shadow-sm hover:shadow-md cursor-pointer"
+                }`}
+            >
+              {isExpired ? "Closed" : isLoggedIn ? "Apply Now →" : "Register & Apply"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

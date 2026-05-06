@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import loginImg from "../assets/bg-images/Login.png";
+import loginImg from "../assets/bg-images/Login.webp";
 import AnimatedBg from "../components/Animate";
 import { toast } from "react-toastify";
 

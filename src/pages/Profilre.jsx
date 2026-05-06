@@ -20,7 +20,7 @@ import { RiGovernmentFill } from "react-icons/ri";
 /* ══════════════════════════════════════════
    CONSTANTS
 ══════════════════════════════════════════ */
-const API_BASE = "https://g2u.mavenerp.in/g2uapi/public/api";
+const API_BASE = "https://careermitra.in/api/public/api";
 
 /* ══════════════════════════════════════════
    UTILS

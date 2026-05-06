@@ -1,383 +1,424 @@
-import React, { useState } from 'react';
-import { 
-  Briefcase, 
-  Calendar, 
-  Users, 
-  GraduationCap, 
-  Clock, 
-  ExternalLink, 
-  ChevronLeft, 
-  ChevronRight,
-  Search,
-  Filter
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from "react";
+import { Calendar, ExternalLink, Search, FileText, Building2, Eye, X, ChevronLeft, ChevronRight } from "lucide-react";
 
-const InternshipTable = () => {
-  // Job data from the provided Excel content
-  const jobs = [
-    {
-      title: "Junior Engineer (Electrical)",
-      organization: "Reserve Bank of India",
-      websiteUrl: "https://opportunities.rbi.org.in",
-      category: "Banks / Finance",
-      postDate: "2026-04-16",
-      deadline: "2026-05-06",
-      noOfPosts: 4,
-      qualifications: "Diploma in Electrical or Electrical & Electronics Engineering",
-      age: "20-30",
-      jobType: "Full Time"
-    },
-    {
-      title: "Junior Engineer (Civil)",
-      organization: "Reserve Bank of India",
-      websiteUrl: "https://opportunities.rbi.org.in",
-      category: "Banks / Finance",
-      postDate: "2026-04-16",
-      deadline: "2026-05-06",
-      noOfPosts: 7,
-      qualifications: "Diploma in Civil Engineering with minimum 65% marks",
-      age: "20-30",
-      jobType: "Full Time"
-    },
-    {
-      title: "Medical Lab Technician (MLT)",
-      organization: "Broadcast Engineering Consultants India Limited (BECIL)",
-      websiteUrl: "https://www.becil.com",
-      category: "Central Government",
-      postDate: "2026-04-16",
-      deadline: "2026-04-27",
-      noOfPosts: 26,
-      qualifications: "B.Sc in Medical Lab Technology from recognized institute",
-      age: "21-35",
-      jobType: "Skillup"
-    },
-    {
-      title: "Perfusionist",
-      organization: "Broadcast Engineering Consultants India Limited (BECIL)",
-      websiteUrl: "https://www.becil.com",
-      category: "Central Government",
-      postDate: "2026-04-16",
-      deadline: "2026-04-27",
-      noOfPosts: 2,
-      qualifications: "B.Sc Degree in relevant field from recognized university",
-      age: "18-40",
-      jobType: "Skillup"
-    },
-    {
-      title: "Research Intern",
-      organization: "National Institute of Rural Development and Panchayati Raj (NIRDPR)",
-      websiteUrl: "https://career.nirdpr.in",
-      category: "Central Government",
-      postDate: "2026-04-15",
-      deadline: "2026-04-17",
-      noOfPosts: 2,
-      qualifications: "Final year UG students or graduates in Social Sciences",
-      age: "18-25",
-      jobType: "Internship"
-    }
-  ];
+const ITEMS_PER_PAGE = 10;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+};
 
-  // Filter jobs based on search term and job type filter
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || job.jobType.toLowerCase() === filterType.toLowerCase();
-    return matchesSearch && matchesFilter;
-  });
+const normalizeLink = (link) => {
+  if (!link) return "#";
+  return link.startsWith("http") ? link : `https://${link}`;
+};
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstItem, indexOfLastItem);
+/* ── Skeleton loader rows ──────────────────────────────────────────────── */
+const SkeletonRow = ({ i }) => (
+  <tr className="border-b border-orange-50">
+    {[40, 20, 25, 30, 20].map((w, ci) => (
+      <td key={ci} className="px-4 py-3">
+        <div
+          className="h-4 rounded-lg animate-pulse"
+          style={{
+            width: `${w + Math.random() * 20}%`,
+            background: "linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%)",
+            backgroundSize: "200% 100%",
+            animation: `shimmer 1.6s ease-in-out infinite ${i * 0.08}s`,
+          }}
+        />
+      </td>
+    ))}
+  </tr>
+);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+/* ── Mobile card skeleton ──────────────────────────────────────────────── */
+const SkeletonCard = () => (
+  <div className="bg-white rounded-2xl border border-orange-100 p-4 space-y-3">
+    <div className="h-5 w-3/4 rounded-lg bg-gray-200 animate-pulse" />
+    <div className="h-4 w-1/3 rounded-full bg-orange-100 animate-pulse" />
+    <div className="h-16 rounded-xl bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-xl bg-orange-100 animate-pulse" />
+  </div>
+);
 
-  const getDaysRemaining = (deadline) => {
-    if (!deadline) return 0;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(deadline);
-    if (Number.isNaN(endDate.getTime())) return 0;
-    endDate.setHours(0, 0, 0, 0);
-
-    const diffTime = endDate.getTime() - today.getTime();
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-
-
+/* ── Detail Modal ──────────────────────────────────────────────────────── */
+const DetailModal = ({ item, onClose }) => {
+  if (!item) return null;
   return (
-    <div id='internship' className="h-scree bg-gray-50 flex flex-col overflow-hidden">
-      {/* Header Section */}
-     
-
-      {/* Filters Section */}
-      <div className="px-6 py-3 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search by title, organization or category..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-              />
-            </div>
-            <div className="flex gap-2">
-                <div className="bg-orange-50 rounded-lg px-4 py-2">
-              <span className="text-orange-600 font-semibold">{filteredJobs.length} Active Positions</span>
-            </div>
-              <button
-                onClick={() => setFilterType('all')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterType === 'all' 
-                    ? 'bg-orange-500 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                All Opportunities 
-              </button>
-             
-              <button
-                onClick={() => setFilterType('Skillup')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterType === 'Skillup' 
-                    ? 'bg-orange-500 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Skill Up opportunities
-              </button>
-              <button
-                onClick={() => setFilterType('internship')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterType === 'internship' 
-                    ? 'bg-orange-500 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Internship
-              </button>
-            </div>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: "modalIn 0.28s cubic-bezier(.34,1.56,.64,1) both" }}
+      >
+        {/* Modal header */}
+        <div className="relative rounded-t-3xl overflow-hidden"
+          style={{ background: "linear-gradient(135deg,#f97316 0%,#ea580c 100%)" }}>
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: "radial-gradient(circle at 70% 40%, white 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
+          <div className="relative p-6 pr-14">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-orange-200 block mb-1">
+              Internship Detail
+            </span>
+            <h2 className="text-lg font-black text-white leading-snug">{item.subject}</h2>
           </div>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/35 transition-colors"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
-      </div>
 
-      {/* Table Section */}
-      <div className="flex-1 overflow-auto px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Title & Organization
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Post Date
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Deadline
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Posts
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Qualifications
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Age
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y  divide-gray-200">
-                  {currentJobs.map((job, index) => {
-                    const daysRemaining = getDaysRemaining(job.deadline);
-                    const isUrgent = daysRemaining <= 10 && daysRemaining > 0;
-                    const isExpired = daysRemaining < 0;
-                    
-                    return (
-                      <tr key={index} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-gray-900">{job.title}</span>
-                            <span className="text-xs text-gray-500">{job.organization}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-700">{job.category}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-700">{formatDate(job.postDate)}</span>
-                        </td>
-                        <td className="px-2 py-4">
-                          <div className="flex flex-col">
-                            <span className={`text-sm font-medium ${isExpired ? 'text-red-600' : isUrgent ? 'text-orange-600' : 'text-gray-700'}`}>
-                              {formatDate(job.deadline)}
-                            </span>
-                            {!isExpired && (
-                              <span className={`text-xs ${isUrgent ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>
-                                {daysRemaining} days left
-                              </span>
-                            )}
-                            {isExpired && (
-                              <span className="text-xs text-red-500">Expired</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-1">
-                            <Users className="w-3 h-3 text-gray-400" />
-                            <span className="text-sm text-gray-700">{job.noOfPosts}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-600 line-clamp-2 max-w-xs">
-                            {job.qualifications}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-700">{job.age}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            job.jobType === 'Internship' 
-                              ? 'bg-purple-100 text-purple-800'
-                              : job.jobType === 'Skillup'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}>
-                            {job.jobType}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <a
-                            href={job.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors"
-                          >
-                            Apply <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+        {/* Modal body */}
+        <div className="p-6 space-y-4">
+          {/* Date row */}
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-xl text-sm">
+              <Calendar className="w-4 h-4 text-orange-500" />
+              <span className="text-gray-700 font-semibold">{formatDate(item.date)}</span>
+              <span className="text-gray-400 text-xs">Posted</span>
             </div>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden divide-y divide-gray-200">
-              {currentJobs.map((job, index) => {
-                const daysRemaining = getDaysRemaining(job.deadline);
-                const isUrgent = daysRemaining <= 10 && daysRemaining > 0;
-                
-                return (
-                  <div key={index} className="p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="text-base font-semibold text-gray-900">{job.title}</h3>
-                        <p className="text-sm text-gray-500">{job.organization}</p>
-                      </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        job.jobType === 'Internship' 
-                          ? 'bg-purple-100 text-purple-800'
-                          : job.jobType === 'Skillup'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {job.jobType}
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-gray-600">{job.category}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-gray-600">{job.noOfPosts} Posts</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-gray-600">Posted: {formatDate(job.postDate)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" />
-                        <span className={`${isUrgent ? 'text-orange-600 font-medium' : 'text-gray-600'}`}>
-                          Deadline: {formatDate(job.deadline)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm">
-                      <span className="text-gray-500">Qualification:</span>
-                      <p className="text-gray-700 mt-1">{job.qualifications}</p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-sm text-gray-600">Age: {job.age}</span>
-                      <a
-                        href={job.websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors"
-                      >
-                        Apply Now <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-700 font-semibold">{formatDate(item.updatedAt)}</span>
+              <span className="text-gray-400 text-xs">Updated</span>
             </div>
-
-            {/* Empty State */}
-            {filteredJobs.length === 0 && (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                  <Search className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No jobs found</h3>
-                <p className="text-gray-500">Try adjusting your search or filter criteria</p>
-              </div>
-            )}
           </div>
+
+          {/* Eligibility */}
+          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Eligibility / Category</p>
+            <p className="text-sm text-gray-800 font-medium leading-relaxed">
+              {item.category || "Not specified"}
+            </p>
+          </div>
+
+          {/* Details / Comments */}
+          <div className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-orange-400 mb-2">Details</p>
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              {item.comments || "No additional details provided."}
+            </p>
+          </div>
+
+          {/* Apply button */}
+          <a
+            href={normalizeLink(item.link)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-black text-white transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+            style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}
+          >
+            Apply Now
+            <ExternalLink className="w-4 h-4" />
+          </a>
         </div>
       </div>
     </div>
+  );
+};
+
+/* ── Mobile Card ───────────────────────────────────────────────────────── */
+const MobileCard = ({ item, onView }) => (
+  <article className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+    <div className="h-1 w-full" style={{ background: "linear-gradient(to right,#f97316,#fbbf24)" }} />
+    <div className="p-2">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="mt-0.5 p-2 rounded-xl bg-orange-50 text-orange-500">
+          <Building2 className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">{item.subject}</h3>
+          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-orange-50 text-[11px] font-semibold text-orange-600">
+            <Calendar className="w-3 h-3" /> {formatDate(item.date)}
+          </span>
+        </div>
+      </div>
+
+      <p className="text-[11px] sm:text-xs text-gray-500 mb-3 bg-gray-50 rounded-xl p-2 leading-relaxed wrap-break-word whitespace-normal line-clamp-none sm:line-clamp-2">
+        {item.category || "No eligibility specified"}
+      </p>
+
+      <div className="flex gap-1">
+        <button
+          onClick={() => onView(item)}
+          className="flex-1 flex items-center gap-1 justify-center  py-2 rounded-xl text-xs font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+        >
+          <Eye className="w-3.5 h-3.5" /> View Details
+        </button>
+        <a
+          href={normalizeLink(item.link)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-green-500 text-white hover:bg-green-600 transition-colors"
+        >
+          Apply <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </div>
+  </article>
+);
+
+/* ── Pagination ────────────────────────────────────────────────────────── */
+const Pagination = ({ current, total, onChange }) => {
+  if (total <= 1) return null;
+
+  /* Build page number array with ellipsis */
+  const pages = [];
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== "…") {
+      pages.push("…");
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 mt-8">
+      <button
+        onClick={() => onChange(Math.max(current - 1, 1))}
+        disabled={current === 1}
+        className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+      >
+        <ChevronLeft className="w-4 h-4" /> Prev
+      </button>
+
+      {pages.map((p, i) =>
+        p === "…" ? (
+          <span key={`e${i}`} className="px-2 text-gray-400 text-sm">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${
+              p === current
+                ? "bg-orange-500 text-white shadow-md shadow-orange-200"
+                : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600"
+            }`}
+          >
+            {p}
+          </button>
+        )
+      )}
+
+      <button
+        onClick={() => onChange(Math.min(current + 1, total))}
+        disabled={current === total}
+        className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+      >
+        Next <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+/* ── Main Component ────────────────────────────────────────────────────── */
+const InternshipTable = () => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("https://careermitra.in/api/public/api/news");
+        const result = await res.json();
+        if (result.status) {
+          setItems(
+            (result.data || []).map((item) => ({
+              id: item.id,
+              subject: item.subject,
+              category: item.category,
+              comments: item.comments,
+              link: item.link,
+              date: item.date,
+              createdAt: item.created_at,
+              updatedAt: item.updated_at,
+            }))
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) =>
+      [item.subject, item.category, item.comments]
+        .filter(Boolean)
+        .some((v) => v.toLowerCase().includes(q))
+    );
+  }, [items, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const pageItems = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+
+  return (
+    <section className="min-h-screen" style={{ background: "linear-gradient(160deg,#fff7ed 0%,#ffffff 50%,#fff7ed 100%)" }}>
+      {/* ── Content ── */}
+      <div className="md:max-w-7xl w-full mx-auto px-1 md:px-6">
+
+        {loading ? (
+          <>
+            {/* Desktop skeleton */}
+            <div className="hidden md:block  rounded-3xl border border-orange-100 shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead className="">
+                  <tr>
+                    {["#", "Internship Title", "Posted Date", "Eligibility", "Action"].map((h) => (
+                      <th key={h} className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(8)].map((_, i) => <SkeletonRow key={i} i={i} />)}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile skeleton */}
+            <div className="md:hidden space-y-4">
+              {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          </>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center min-h-64 bg-white rounded-3xl border border-gray-200 shadow-sm px-6 text-center">
+            <div className="p-4 rounded-full bg-gray-100 text-gray-400 mb-4">
+              <Search className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-black text-gray-800">No internships found</h3>
+            <p className="text-sm text-gray-500 mt-2 max-w-sm">
+              Try a different keyword to find matching internship updates.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* ── Desktop Table ── */}
+            <div className="hidden md:block bg-white rounded-3xl border border-orange-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full" style={{ minWidth: 780 }}>
+                  <thead>
+                    <tr style={{ background: "linear-gradient(to right,#fff7ed,#ffedd5)" }}>
+                      {["#", "Internship Title", "Posted Date", "Eligibility", "View", "Apply"].map((h) => (
+                        <th key={h} className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-orange-50/80">
+                    {pageItems.map((item, idx) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-orange-50/40 transition-colors group"
+                      >
+                        {/* # */}
+                        <td className="px-4 py-3 text-xs font-bold text-gray-400 whitespace-nowrap">
+                          {(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
+                        </td>
+
+                        {/* Title — single line with ellipsis */}
+                        <td className="px-4 py-3 max-w-[260px]">
+                          <p className="text-sm font-bold text-gray-900 truncate leading-snug" title={item.subject}>
+                            {item.subject}
+                          </p>
+                          <p className="text-[11px] text-gray-400 mt-0.5">Updated {formatDate(item.updatedAt)}</p>
+                        </td>
+
+                        {/* Date */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-xs font-semibold text-orange-600">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(item.date)}
+                          </span>
+                        </td>
+
+                        {/* Eligibility — single line */}
+                        <td className="px-4 py-3 max-w-[200px]">
+                          <p className="text-sm text-gray-600 truncate" title={item.category || ""}>
+                            {item.category || <span className="text-gray-400 italic text-xs">Not specified</span>}
+                          </p>
+                        </td>
+
+                        {/* View button */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <button
+                            onClick={() => setSelectedItem(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white hover:bg-orange-600 active:scale-95 transition-all shadow-sm hover:shadow-md"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> View
+                          </button>
+                        </td>
+
+                        {/* Apply */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <a
+                            href={normalizeLink(item.link)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-green-500 text-white hover:bg-green-600 active:scale-95 transition-all shadow-sm hover:shadow-md"
+                          >
+                            Apply <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* ── Mobile Cards ── */}
+            <div className="md:hidden space-y-4">
+              {pageItems.map((item) => (
+                <MobileCard key={item.id} item={item} onView={setSelectedItem} />
+              ))}
+            </div>
+
+            <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
+          </>
+        )}
+      </div>
+
+      {/* ── Detail Modal ── */}
+      {selectedItem && (
+        <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+      )}
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.92) translateY(20px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </section>
   );
 };
 

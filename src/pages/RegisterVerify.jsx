@@ -2,12 +2,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import loginImg from "../assets/bg-images/Login.png";
+import loginImg from "../assets/bg-images/Login.webp";
 import AnimatedBg from "../components/Animate";
 import { toast } from "react-toastify";
 
 export default function VerifyOtp() {
-  const { verifyRegisterOtp, loading } = useAuth();
+  const { verifyRegisterOtp, loginPendingRegisteredUser, checkProfile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -64,7 +64,24 @@ export default function VerifyOtp() {
       
       if (res?.status) {
         toast.success("Account created successfully! 🎉");
-        navigate("/login");
+        const loginRes = await loginPendingRegisteredUser(email);
+
+        if (!loginRes?.status) {
+          navigate("/login", {
+            state: {
+              email,
+              autoLoginNewUser: true,
+            },
+          });
+          return;
+        }
+
+        const profileComplete = await checkProfile(loginRes.token);
+        if (profileComplete) {
+          navigate("/");
+        } else {
+          navigate("/user-profile-filling", { state: { email } });
+        }
       } else {
         setError(res?.message || "Invalid OTP. Please try again.");
       }

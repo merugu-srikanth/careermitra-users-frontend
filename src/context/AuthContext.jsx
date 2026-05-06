@@ -4,12 +4,33 @@ import { toast } from "react-toastify";
 
 const AuthContext = createContext();
 
-const API = "https://g2u.mavenerp.in/g2uapi/public/api";
+const API = "https://careermitra.in/api/public/api";
+const PENDING_REGISTER_KEY = "pendingRegisterCredentials";
+
+const readPendingRegisterCredentials = () => {
+  try {
+    const raw = localStorage.getItem(PENDING_REGISTER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(false);
+
+  const storePendingRegisterCredentials = (email, password) => {
+    if (!email || !password) return;
+    localStorage.setItem(PENDING_REGISTER_KEY, JSON.stringify({ email, password }));
+  };
+
+  const clearPendingRegisterCredentials = () => {
+    localStorage.removeItem(PENDING_REGISTER_KEY);
+  };
+
+  const getPendingRegisterCredentials = () => readPendingRegisterCredentials();
 
   // 🔐 LOGIN WITH PASSWORD
   const loginWithPassword = async (email, password) => {
@@ -33,6 +54,23 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loginPendingRegisteredUser = async (fallbackEmail, fallbackPassword) => {
+    const stored = getPendingRegisterCredentials();
+    const email = fallbackEmail || stored?.email;
+    const password = fallbackPassword || stored?.password;
+
+    if (!email || !password) {
+      return { status: false, message: "Registered user login details not found" };
+    }
+
+    const res = await loginWithPassword(email, password);
+    if (res?.status) {
+      clearPendingRegisterCredentials();
+    }
+
+    return res;
   };
 
   // 📩 SEND OTP (LOGIN)
@@ -148,7 +186,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🚪 LOGOUT
+  // � CHECK PROFILE COMPLETION
+  const checkProfile = async (authToken) => {
+    try {
+      const res = await axios.get(`${API}/profile`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (!res.data?.status) return false;
+      const ed = res.data.data?.education || {};
+      return !!(
+        ed.qualification_level ||
+        ed.tenth?.board ||
+        ed.intermediate?.course ||
+        ed.graduation?.course ||
+        ed.iti?.trade ||
+        ed.post_graduation?.course
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  // �🚪 LOGOUT
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -163,6 +222,7 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         loginWithPassword,
+        loginPendingRegisteredUser,
         sendOtp,
         verifyOtp,
         register,
@@ -170,6 +230,10 @@ export const AuthProvider = ({ children }) => {
         forgotPassword,
         resetPassword,
         logout,
+        checkProfile,
+        storePendingRegisterCredentials,
+        clearPendingRegisterCredentials,
+        getPendingRegisterCredentials,
       }}
     >
       {children}

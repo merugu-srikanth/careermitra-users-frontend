@@ -1,8 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AllJobCard from "../components/AllJobCard";
-import { STATIC_JOBS, JOB_CATEGORIES } from "./staticJobs";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const SearchIcon = () => (
@@ -104,6 +103,13 @@ const GraduationIcon = () => (
 
 const ITEMS_PER_PAGE = 12;
 
+const normalizeExternalUrl = (value) => {
+  if (!value || typeof value !== "string") return "";
+  const v = value.trim();
+  if (!v) return "";
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+};
+
 // ── Pagination ─────────────────────────────────────────────────────────────────
 function Pagination({ current, total, onChange }) {
   if (total <= 1) return null;
@@ -156,19 +162,19 @@ function Pagination({ current, total, onChange }) {
 }
 
 // ── Table View Component ──────────────────────────────────────────────────────
-function TableView({ jobs, isLoggedIn, onApply }) {
+function TableView({ jobs, isLoggedIn, onApply, onViewNotification }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="overflow-y-auto max-h-[70vh]">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-orange-50 to-amber-50 sticky top-0">
+          <thead className="bg-linear-to-r from-orange-50 to-amber-50 sticky top-0">
             <tr>
               <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">s no</th>
               <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Job Title</th>
               <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Category</th>
               <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Posts</th>
               <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Age Limit</th>
-              <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Location</th>
+              {/* <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Location</th> */}
               <th scope="col" className="px-2 py-3 border border-amber-300 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Dates</th>
               <th scope="col" className="px-2 py-3 border border-amber-300 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
             </tr>
@@ -188,7 +194,7 @@ function TableView({ jobs, isLoggedIn, onApply }) {
                       <BuildingIcon />
                       <span>{job.org}</span>
                     </div>
-                    <div className="text-xs text-gray-400 truncate max-w-[200px]">{job.qualifications?.slice(0, 60)}...</div>
+                    <div className="text-xs text-gray-400 truncate max-w-50">{job.qualifications?.slice(0, 60)}...</div>
                   </td>
                   <td className="px-2 py-3 border border-amber-300 whitespace-nowrap">
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
@@ -202,12 +208,12 @@ function TableView({ jobs, isLoggedIn, onApply }) {
                     </div>
                   </td>
                   <td className="px-2 py-3 border border-amber-300 whitespace-nowrap text-sm text-gray-600">{job.age} years</td>
-                  <td className="px-2 py-3 border border-amber-300 whitespace-nowrap">
+                  {/* <td className="px-2 py-3 border border-amber-300 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <LocationIcon />
                       <span className="text-sm text-gray-600">{job.location || "All India"}</span>
                     </div>
-                  </td>
+                  </td> */}
                   <td className="px-2 py-3 border border-amber-200 whitespace-nowrap">
                     <div className="flex flex-col gap-1 text-xs">
                       <div className="flex items-center gap-1.5 text-gray-700">
@@ -223,17 +229,30 @@ function TableView({ jobs, isLoggedIn, onApply }) {
                     </div>
                   </td>
                   <td className="px-2 py-3 border border-amber-300 whitespace-nowrap text-center">
-                    <button
-                      onClick={() => onApply(job.applyLink, isExpired)}
-                      disabled={!isActive}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200
-                        ${isActive
-                          ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm hover:shadow-md"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                    >
-                      {isActive ? (isLoggedIn ? "Apply" : "Register") : "Closed"}
-                    </button>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => onViewNotification(job.notificationUrl, isExpired)}
+                        disabled={!isActive || !job.notificationUrl}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200
+                          ${isActive && job.notificationUrl
+                            ? "bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          }`}
+                      >
+                        Notify
+                      </button>
+                      <button
+                        onClick={() => onApply(job.applyLink, isExpired)}
+                        disabled={!isActive}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200
+                          ${isActive
+                            ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm hover:shadow-md"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          }`}
+                      >
+                        {isActive ? (isLoggedIn ? "Apply" : "Register") : "Closed"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -250,33 +269,87 @@ export default function AllJobs() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedAge, setSelectedAge] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [jobType, setJobType] = useState("");
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState("table"); // "grid" or "table"
+  const [viewMode, setViewMode] = useState(() => (
+    typeof window !== "undefined" && window.innerWidth < 768 ? "grid" : "table"
+  )); // "grid" or "table"
 
   const isLoggedIn = Boolean(user || token || localStorage.getItem("token"));
 
-  // Only show status === 0 jobs
-  const activeJobs = useMemo(() => STATIC_JOBS.filter((j) => j.status === 0), []);
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const params = new URLSearchParams({
+          page,
+          limit: ITEMS_PER_PAGE,
+          sort: sortBy || "newest",
+          search: search || "",
+        });
+
+        if (jobType) {
+          params.append("jobType", jobType);
+        }
+
+        const res = await fetch(`https://careermitra.tech/api/jobs?${params}`);
+        const data = await res.json();
+
+        if (data.success) {
+          const mappedJobs = (data?.data?.jobs || []).map((j) => ({
+            id: j._id,
+            title: j.title,
+            org: j.jobSource,
+            category: j.jobType || "Job",
+            noOfPosts: j.numberOfPosts,
+            age: j.ageRequirement,
+            location: "All India",
+            qualifications: j.qualifications,
+            applyLink: j.applyLink,
+            notificationUrl: j.notificationUrl || j.notificationURL || j.notification_url || "",
+            postedDate: j.postedDate?.split("T")[0],
+            lastDate: j.applicationDeadline?.split("T")[0],
+          }));
+
+          setJobs(mappedJobs);
+          setTotalPages(data?.data?.pagination?.totalPages || 1);
+          setTotalItems(data?.data?.pagination?.total || mappedJobs.length);
+        } else {
+          setJobs([]);
+          setTotalPages(1);
+          setTotalItems(0);
+          setError(data?.message || "Failed to load jobs");
+        }
+      } catch (err) {
+        console.error("API Error:", err);
+        setJobs([]);
+        setTotalPages(1);
+        setTotalItems(0);
+        setError("Unable to load jobs right now.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [page, sortBy, search, jobType]);
 
   // Filtered + sorted
   const filtered = useMemo(() => {
-    let result = [...activeJobs];
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (j) =>
-          j.title.toLowerCase().includes(q) ||
-          j.org.toLowerCase().includes(q) ||
-          j.qualifications.toLowerCase().includes(q) ||
-          j.category.toLowerCase().includes(q)
-      );
-    }
+    let result = [...jobs];
 
     if (selectedCategory !== "All") {
       result = result.filter((j) => j.category === selectedCategory);
@@ -286,59 +359,65 @@ export default function AllJobs() {
       result = result.filter((j) => j.age === selectedAge);
     }
 
-    if (sortBy === "newest") {
-      result.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
-    } else if (sortBy === "oldest") {
-      result.sort((a, b) => new Date(a.lastDate) - new Date(b.lastDate));
-    } else if (sortBy === "posts_high") {
-      result.sort((a, b) => b.noOfPosts - a.noOfPosts);
-    } else if (sortBy === "posts_low") {
-      result.sort((a, b) => a.noOfPosts - b.noOfPosts);
-    }
-
     return result;
-  }, [activeJobs, search, selectedCategory, selectedAge, sortBy]);
+  }, [jobs, selectedCategory, selectedAge]);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const paginated = filtered;
 
   const handlePageChange = (p) => {
     setPage(p);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const hasFilters = search || selectedCategory !== "All" || selectedAge || sortBy !== "newest";
+  const hasFilters = search || selectedCategory !== "All" || selectedAge || sortBy !== "newest" || jobType;
 
   const clearFilters = () => {
     setSearch("");
     setSelectedCategory("All");
     setSelectedAge("");
     setSortBy("newest");
+    setJobType("");
     setPage(1);
   };
 
   const handleApply = (applyLink, isExpired) => {
     if (isExpired) return;
     if (isLoggedIn) {
-      const url = applyLink?.startsWith("http") ? applyLink : `https://${applyLink}`;
+      const url = normalizeExternalUrl(applyLink);
+      if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
     } else {
       navigate("/register");
     }
   };
 
-  // Unique age ranges from data
-  const ageOptions = [...new Set(activeJobs.map((j) => j.age))].sort();
+  const handleViewNotification = (notificationUrl, isExpired) => {
+    if (isExpired || !notificationUrl) return;
+    const url = normalizeExternalUrl(notificationUrl);
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
-  const totalPosts = activeJobs.reduce((s, j) => s + (j.noOfPosts || 0), 0);
+  // Unique age ranges from data
+  const ageOptions = [...new Set(jobs.map((j) => j.age).filter(Boolean))].sort();
+
+  const totalPosts = jobs.reduce((s, j) => s + (j.noOfPosts || 0), 0);
+
+  const jobCategories = useMemo(() => {
+    const cats = [...new Set(jobs.map((j) => j.category).filter(Boolean))];
+    if (selectedCategory !== "All" && selectedCategory && !cats.includes(selectedCategory)) {
+      cats.unshift(selectedCategory);
+    }
+    return ["All", ...cats.filter((c) => c !== "All")];
+  }, [jobs, selectedCategory]);
 
   
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-green-50/20">
+    <div className="min-h-screen bg-linear-to-br from-orange-50/40 via-white to-green-50/20">
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
-      <div className="relative bg-gradient-to-b from-orange-100 via-orange-100 to-orange-700 overflow-hidden">
+      <div className="relative bg-linear-to-b from-orange-100 via-orange-100 to-orange-700 overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-white/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -346,7 +425,7 @@ export default function AllJobs() {
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16 text-center mt-9">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-orange-500/90 text-xs font-bold px-4 py-1.5 rounded-full mb-3 border border-white/25">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            {activeJobs.length} Active Listings • {totalPosts.toLocaleString()} Total Vacancies
+            {totalItems} Active Listings • {totalPosts.toLocaleString()} Total Vacancies
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-black mb-4 tracking-tight leading-none">
@@ -382,12 +461,12 @@ export default function AllJobs() {
 
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             {[
-              { label: "Total Jobs", val: activeJobs.length },
+              { label: "Total Jobs", val: totalItems },
               { label: "Total Posts", val: totalPosts.toLocaleString() },
-              { label: "Organisations", val: [...new Set(activeJobs.map((j) => j.org))].length },
-              { label: "Categories", val: JOB_CATEGORIES.length - 1 },
+              { label: "Organisations", val: [...new Set(jobs.map((j) => j.org).filter(Boolean))].length },
+              { label: "Categories", val: Math.max(jobCategories.length - 1, 0) },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white/15 backdrop-blur-sm border border-white/25 rounded-2xl px-5 py-2.5 text-white text-center min-w-[100px]">
+              <div key={stat.label} className="bg-white/15 backdrop-blur-sm border border-white/25 rounded-2xl px-5 py-2.5 text-white text-center min-w-25">
                 <div className="text-xl font-black">{stat.val}</div>
                 <div className="text-xs text-orange-100 font-medium">{stat.label}</div>
               </div>
@@ -400,7 +479,7 @@ export default function AllJobs() {
 
         {/* ── Category Pills ───────────────────────────────────────────────────── */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
-          {JOB_CATEGORIES.map((cat) => (
+          {jobCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => { setSelectedCategory(cat); setPage(1); }}
@@ -452,8 +531,6 @@ export default function AllJobs() {
             >
               <option value="newest">Deadline: Soonest</option>
               <option value="oldest">Deadline: Latest</option>
-              <option value="posts_high">Posts: High to Low</option>
-              <option value="posts_low">Posts: Low to High</option>
             </select>
 
             {/* Advanced filter toggle */}
@@ -467,7 +544,7 @@ export default function AllJobs() {
             >
               <FilterIcon />
               Filters
-              {(selectedAge) && (
+              {(selectedAge || jobType) && (
                 <span className="bg-white/30 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-black">1</span>
               )}
             </button>
@@ -507,9 +584,21 @@ export default function AllJobs() {
                 onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
                 className="w-full text-sm border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-300"
               >
-                {JOB_CATEGORIES.map((c) => (
+                {jobCategories.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Job Type</label>
+              <select
+                value={jobType}
+                onChange={(e) => { setJobType(e.target.value); setPage(1); }}
+                className="w-full text-sm border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              >
+                <option value="">All Types</option>
+                <option value="Job">Job</option>
+                <option value="Internship">Internship</option>
               </select>
             </div>
             <div className="flex items-end">
@@ -524,7 +613,23 @@ export default function AllJobs() {
         )}
 
         {/* ── Job Display (Grid or Table) ───────────────────────────────────────── */}
-        {paginated.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Loading Jobs...</h3>
+            <p className="text-gray-400 text-sm">Please wait while we fetch latest listings.</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <h3 className="text-xl font-bold text-red-600 mb-2">Failed to load jobs</h3>
+            <p className="text-gray-500 text-sm mb-6 max-w-xs">{error}</p>
+            <button
+              onClick={() => setPage(1)}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition-all duration-200"
+            >
+              Retry
+            </button>
+          </div>
+        ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
             <BriefcaseEmptyIcon />
             <h3 className="text-xl font-bold text-gray-700 mb-2">No Jobs Found</h3>
@@ -551,8 +656,9 @@ export default function AllJobs() {
                 org={job.org}
                 lastDate={job.lastDate}
                 postedDate={job.postedDate}
-                location={job.location}
+                // location={job.location}
                 applyLink={job.applyLink}
+                notificationUrl={job.notificationUrl}
                 noOfPosts={job.noOfPosts}
                 age={job.age}
                 qualifications={job.qualifications}
@@ -561,7 +667,7 @@ export default function AllJobs() {
             ))}
           </div>
         ) : (
-          <TableView jobs={paginated} isLoggedIn={isLoggedIn} onApply={handleApply} />
+          <TableView jobs={paginated} isLoggedIn={isLoggedIn} onApply={handleApply} onViewNotification={handleViewNotification} />
         )}
 
         {/* ── Pagination ───────────────────────────────────────────────────────── */}
@@ -569,7 +675,7 @@ export default function AllJobs() {
 
         {filtered.length > 0 && (
           <p className="text-center text-xs text-gray-400 mt-4">
-            Showing {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} jobs
+            Showing {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min((page - 1) * ITEMS_PER_PAGE + filtered.length, totalItems || filtered.length)} of {totalItems || filtered.length} jobs
           </p>
         )}
       </div>

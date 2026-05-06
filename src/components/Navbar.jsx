@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../assets/NewLogo.png";
@@ -9,10 +9,10 @@ import {
   FaSignInAlt, FaSignOutAlt, FaTachometerAlt,
   FaLinkedin, FaTwitter, FaWhatsapp, FaInstagram,
   FaFacebook, FaChevronDown, FaTimes, FaBars,
-  FaUser, FaEnvelope
+  FaUser, FaEnvelope, FaBell
 } from "react-icons/fa";
 
-const API_BASE = "https://g2u.mavenerp.in/g2uapi/public/api";
+const API_BASE = "https://careermitra.in/api/public/api";
 
 /* ─── SOCIAL LINKS ─────────────────────────────────────────────────────────── */
 const socials = [
@@ -27,22 +27,21 @@ const socials = [
 const navLinks = [
   { name: "HOME", path: "/", Icon: FaHome },
   { name: "ABOUT US", path: "/about-us", Icon: FaInfoCircle },
-  { name: "JOBS", path: "/jobs", Icon: FaInfoCircle },
-
-  // {
-  //   name: "JOBS",
-  //   dropdown: [
-  //     // { name: "SSC Jobs 2026", path: "/jobs/ssc" },
-  //     { name: "SSC Jobs 2026", path: "/coming-soon" },
-  //     { name: "Bank Jobs 2026", path: "/coming-soon" },
-  //     { name: "Railway Jobs 2026", path: "/coming-soon" },
-  //     { name: "Defence Jobs 2026", path: "/coming-soon" },
-  //     { name: "Police Jobs 2026", path: "/coming-soon" },
-  //   ],
-  // },
-  { name: "CONTACT US", path: "/contact-us", Icon: FaPhoneAlt },
+  { name: " LATEST GOVT JOBS", path: "/jobs", Icon: FaInfoCircle },
+  // { name: "INTERNSHIP GUIDE", path: "/internship-guide", Icon: FaInfoCircle },
+  {
+    name: "CAREER",
+    dropdown: [
+      { name: "Career Guide", path: "/career-guide" },
+      { name: "Internship Guide", path: "/internship-guide" },
+      // { name: "Career Tips", path: "/coming-soon" },
+      // { name: "Interview Preparation", path: "/coming-soon" },
+      // { name: "Career Counselling", path: "/coming-soon" },
+      // { name: "Skill Development", path: "/coming-soon" },
+    ],
+  },
   { name: "BLOGS", path: "/blogs", Icon: FaBlog },
-
+    { name: "CONTACT US", path: "/contact-us", Icon: FaPhoneAlt },
 ];
 
 /* ─── AVATAR ───────────────────────────────────────────────────────────────── */
@@ -73,13 +72,14 @@ const AvatarSVG = ({ size = 64 }) => (
 export default function Navbar() {
   const { user, token, logout } = useAuth();
   const [profileData, setProfileData] = useState(null);
+  const [jobsBellCount, setJobsBellCount] = useState({ activeCount: 0, newCount: 0, displayCount: 0, showNew: false });
   const navigate = useNavigate();
   const location = useLocation();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [jobsOpen, setJobsOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const dropdownRef = useRef();
 
@@ -118,6 +118,13 @@ export default function Navbar() {
 
   const displayName = profileData?.name || user?.name || "User";
   const displayEmail = profileData?.email || user?.email || "";
+  const profileCompletion = profileData?.education?.qualification_level ? 100 : 0;
+  const profileIncomplete = !!token && profileCompletion < 100;
+
+  const seenStorageKey = useMemo(() => {
+    const ident = profileData?.id || profileData?.email || user?.id || user?.email || "guest";
+    return `cm_dashboard_seen_${ident}`;
+  }, [profileData?.id, profileData?.email, user?.id, user?.email]);
 
   const isActive = (path) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -125,6 +132,85 @@ export default function Navbar() {
   const visibleNavLinks = navLinks.filter(
     (link) => link.name !== "JOBS" || !!token
   );
+
+  useEffect(() => {
+    if (!token) {
+      setJobsBellCount({ activeCount: 0, newCount: 0, displayCount: 0, showNew: false });
+      return;
+    }
+
+    const toDateOrNull = (d) => {
+      if (!d) return null;
+      const dt = new Date(d);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    };
+
+    const isExpiredJob = (job) => {
+      const deadline = toDateOrNull(
+        job?.application_last_date ||
+        job?.last_date ||
+        job?.application_deadline ||
+        job?.apply_last_date ||
+        job?.deadline
+      );
+      if (!deadline) return false;
+      const dayEnd = new Date(deadline);
+      dayEnd.setHours(23, 59, 59, 999);
+      return dayEnd < new Date();
+    };
+
+    (async () => {
+      try {
+        let jobsSeenAt = null;
+        try {
+          const raw = localStorage.getItem(seenStorageKey);
+          const seen = raw ? JSON.parse(raw) : {};
+          jobsSeenAt = toDateOrNull(seen.jobs_seen_at);
+        } catch {
+          jobsSeenAt = null;
+        }
+
+        const jobsRes = await axios.get(`${API_BASE}/job-posts-assigned/my-assigned`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        });
+
+        const jobs = jobsRes?.data?.status === true
+          ? (jobsRes?.data?.assigned_job_posts?.data || [])
+          : [];
+
+        const activeJobs = jobs.filter((j) => !isExpiredJob(j));
+
+        const jobsNewCount = activeJobs.filter((j) => {
+          const created = toDateOrNull(j?.posted_date || j?.created_at || j?.updated_at);
+          if (!created) return false;
+          return !jobsSeenAt || created > jobsSeenAt;
+        }).length;
+
+        const onJobsTab =
+          location.pathname === "/user-dashboard" &&
+          new URLSearchParams(location.search).get("tab") === "jobs";
+
+        const safeNewCount = onJobsTab ? 0 : jobsNewCount;
+        const showNew = safeNewCount > 0;
+        const activeCount = activeJobs.length;
+
+        setJobsBellCount({
+          activeCount,
+          newCount: safeNewCount,
+          displayCount: showNew ? safeNewCount : activeCount,
+          showNew,
+        });
+      } catch {
+        setJobsBellCount((prev) => ({ ...prev, displayCount: prev.displayCount || 0 }));
+      }
+    })();
+  }, [token, seenStorageKey, location.pathname, location.search]);
+
+  const goToJobPostsTab = () => {
+    navigate("/user-dashboard?tab=jobs");
+    setProfileOpen(false);
+    setDrawerOpen(false);
+  };
 
   return (
     <>
@@ -150,121 +236,136 @@ export default function Navbar() {
       {/* ── MAIN NAV ───────────────────────────────────────────────────────── */}
       <nav
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled
-            ? "bg-white/90 backdrop-blur-md text-orange-500 shadow-md"
-            : "bg-transparent"
+          ? "bg-white/90 backdrop-blur-md text-orange-500 shadow-md"
+          : "bg-transparent"
           }`}
       >
         {/* top accent line */}
         <div className="h-0.5 w-full bg-linear-to-r from-orange-400 via-orange-500 to-green-500" />
 
-<div
-  className={` px-4 md:px-15 flex items-center justify-between transition-all duration-300 ${
-    scrolled ? "h-14" : "h-20"
-  }`}
->
+        <div
+          className={` px-4 md:px-15 flex items-center justify-between transition-all duration-300 ${scrolled ? "h-17" : "h-20"
+            }`}
+        >
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-<img
-  src={Logo}
-  alt="Career Mitra"
-  className={`w-auto object-contain transition-all duration-300 ${
-    scrolled ? "h-12" : "h-20"
-  }`}
-/>          </Link>
+            <img
+              src={Logo}
+              alt="Career Mitra"
+              className={`w-auto object-contain transition-all duration-300 ${scrolled ? "h-14" : "h-20"
+                }`}
+            />          </Link>
 
           {/* DESKTOP LINKS */}
           <div className="hidden md:flex items-center gap-1">
             <div className="hidden md:flex items-center gap-1">
-  {visibleNavLinks.map((link) => {
-    // 🔹 NORMAL LINK
-    if (!link.dropdown) {
-      return (
-        <Link
-          key={link.name}
-          to={link.path}
-          className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
-            isActive(link.path)
-              ? "text-orange-500 bg-orange-50"
-              : "text-orange-500 hover:bg-orange-50"
-          }`}
-        >
-          {link.name}
-        </Link>
-      );
-    }
+              {visibleNavLinks.map((link) => {
+                // 🔹 NORMAL LINK
+                if (!link.dropdown) {
+                  return (
+                    <Link
+                      key={link.name}
+                      to={link.path}
+                      className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${isActive(link.path)
+                          ? "text-orange-500 bg-orange-50"
+                          : "text-orange-500 hover:bg-orange-50"
+                        }`}
+                    >
+                      {link.name}
+                    </Link>
+                  );
+                }
 
-    // 🔹 DROPDOWN (JOBS)
-    return (
-      <div
-        key={link.name}
-        className="relative"
-        onMouseEnter={() => setJobsOpen(true)}
-        onMouseLeave={() => setJobsOpen(false)}
-      >
-        <button className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-orange-500 hover:bg-orange-50 rounded-xl">
-          {link.name}
-          <FaChevronDown
-            className={`transition-transform duration-200 ${
-              jobsOpen ? "rotate-180" : ""
-            }`}
-            size={12}
-          />
-        </button>
+                // 🔹 DROPDOWN
+                return (
+                  <div
+                    key={link.name}
+                    className="relative"
+                    onMouseEnter={() => setOpenDropdown(link.name)}
+                    onMouseLeave={() => setOpenDropdown(null)}
+                  >
+                    <button className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-orange-500 hover:bg-orange-50 rounded-xl">
+                      {link.name}
+                      <FaChevronDown
+                        className={`transition-transform duration-200 ${openDropdown === link.name ? "rotate-180" : ""
+                          }`}
+                        size={12}
+                      />
+                    </button>
 
-        <AnimatePresence>
-          {jobsOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="absolute left-0 top-12 w-64 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
-            >
-              {link.dropdown.map((item, i) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className="block px-5 py-3 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  })}
-</div>
+                    <AnimatePresence>
+                      {openDropdown === link.name && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute left-0 top-10 w-64 bg-orange-500 border-2 border-orange-100 border-b-amber-50 rounded-2xl shadow-xl overflow-hidden z-50"
+                        >
+                          {link.dropdown.map((item, i) => (
+                            <Link
+                              key={item.name}
+                              to={item.path}
+                              className="block px-5 py-3 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
+                            >
+                              {item.name}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
             {/* DESKTOP RIGHT */}
             <div className="hidden md:flex items-center gap-3">
               {token ? (
-                <div
-                  ref={dropdownRef}
-                  className="relative"
-                  onMouseEnter={() => setProfileOpen(true)}
-                  onMouseLeave={() => setProfileOpen(false)}
-                >
+                <>
                   <button
-                    onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-all duration-200 shadow-sm shadow-orange-200"
+                    onClick={goToJobPostsTab}
+                    className="relative group w-11 h-11 rounded-2xl bg-white border border-orange-200 text-orange-500 hover:text-orange-600 hover:border-orange-300 hover:shadow-md hover:shadow-orange-100 transition-all duration-200 flex items-center justify-center"
+                    title={jobsBellCount.showNew ? "New jobs" : "Active jobs"}
+                    aria-label="Open eligible government job posts"
                   >
-                    <AvatarSVG size={32} />
-                    <span className="text-sm font-bold max-w-25 truncate">{displayName}</span>
-                    <motion.span animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <FaChevronDown size={11} />
-                    </motion.span>
+                    <FaBell size={16} className="group-hover:animate-pulse" />
+                    <span className={jobsBellCount.showNew
+                      ? "absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-green-500 text-white text-[10px] font-black flex items-center justify-center leading-none shadow"
+                      : "absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center leading-none shadow"
+                    }>
+                        {jobsBellCount.displayCount}
+                      </span>
                   </button>
 
-                  <AnimatePresence>
-                    {profileOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
-                      >
+                  <div
+                    ref={dropdownRef}
+                    className="relative"
+                    onMouseEnter={() => setProfileOpen(true)}
+                    onMouseLeave={() => setProfileOpen(false)}
+                  >
+                    <button
+                      onClick={() => setProfileOpen(!profileOpen)}
+                      className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-all duration-200 shadow-sm shadow-orange-200"
+                    >
+                      <AvatarSVG size={32} />
+                      <span className="text-sm font-bold max-w-25 truncate">{displayName}</span>
+                      <span title="Profile Complation" className="px-2 py-0.5 rounded-full   text-[15px] bg-green-500 animate-bounce font-black leading-none">
+                        {profileCompletion}%
+                      </span>
+                      <motion.span animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <FaChevronDown size={11} />
+                      </motion.span>
+                    </button>
+
+                    <AnimatePresence>
+                      {profileOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50"
+                        >
                         {/* profile header */}
                         <div className="bg-linear-to-br from-orange-500 to-orange-600 p-4">
                           <div className="flex items-center gap-3">
@@ -277,6 +378,38 @@ export default function Navbar() {
                         </div>
 
                         <div className="p-3 space-y-2">
+                          <div className={`rounded-2xl p-3 ${profileIncomplete ? "bg-amber-50 border border-amber-200" : "bg-green-50 border border-green-200"}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-xs font-bold text-gray-700">Profile Completion</p>
+                              <span  className={`text-xs font-black  ${profileIncomplete ? "text-amber-600" : "text-green-600"}`}>
+                                {profileCompletion}% 
+                              </span>
+                            </div>
+                            <div className="h-2 rounded-full bg-white/90 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ${profileIncomplete ? "bg-amber-500" : "bg-green-500"}`}
+                                style={{ width: `${profileCompletion}%` }}
+                              />
+                            </div>
+                            <p className="text-[11px] text-gray-500 mt-2">
+                              {profileIncomplete
+                                ? "Complete your education details to unlock personalised job alerts."
+                                : "Your profile is ready for personalised job alerts."}
+                            </p>
+                            {profileIncomplete && (
+                              <button
+                                onClick={() => {
+                                  navigate("/user-profile-filling");
+                                  setProfileOpen(false);
+                                }}
+                                className="mt-3 w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-200"
+                              >
+                                Complete Profile
+                              </button>
+                            )}
+                          </div>
+                          
+
                           <button
                             onClick={() => { navigate("/user-dashboard"); setProfileOpen(false); }}
                             className="w-full flex items-center gap-3 bg-orange-50 hover:bg-orange-100 text-orange-700 py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-200"
@@ -292,26 +425,33 @@ export default function Navbar() {
                         </div>
 
                         {/* social strip */}
-                        <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-4">
+                        {/* <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-4">
                           {socials.map(({ Icon, href, label, color }) => (
                             <a key={label} href={href} aria-label={label} className={`text-gray-400 ${color} transition-colors duration-200`}>
                               <Icon size={15} />
                             </a>
                           ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                        </div> */}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
               ) : (
                 <Link
                   to="/login"
                   className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-full font-semibold text-sm shadow-sm shadow-orange-200 hover:shadow-md hover:shadow-orange-200 transition-all duration-200"
                 >
-                  <FaSignInAlt size={13} /> Login
+                  <FaSignInAlt size={13} />Student Login
                 </Link>
               )}
             </div>
+             {/* <Link
+                  to="/login"
+                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full font-semibold text-sm shadow-sm shadow-green-200 hover:shadow-md hover:shadow-green-200 transition-all duration-200"
+                >
+                  <FaSignInAlt size={13} /> Vender Login
+                </Link> */}
           </div>
 
 
@@ -370,6 +510,18 @@ export default function Navbar() {
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-black text-base truncate">{displayName}</p>
                       <p className="text-orange-100 text-xs truncate">{displayEmail}</p>
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-white/90 mb-1">
+                          <span>Profile Completion</span>
+                          <span>{profileCompletion}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/20 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-white transition-all duration-700"
+                            style={{ width: `${profileCompletion}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -390,35 +542,35 @@ export default function Navbar() {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-2">Navigation</p>
                   <nav className="space-y-1">
                     {visibleNavLinks.map((link, i) => {
-  if (!link.dropdown) {
-    return (
-      <Link
-        key={link.name}
-        to={link.path}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-orange-50"
-      >
-        {link.name}
-      </Link>
-    );
-  }
+                      if (!link.dropdown) {
+                        return (
+                          <Link
+                            key={link.name}
+                            to={link.path}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-orange-50"
+                          >
+                            {link.name}
+                          </Link>
+                        );
+                      }
 
-  return (
-    <div key={link.name}>
-      <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">
-        {link.name}
-      </p>
-      {link.dropdown.map((item) => (
-        <Link
-          key={item.name}
-          to={item.path}
-          className="block px-6 py-2 text-sm text-gray-700 hover:text-orange-500"
-        >
-          {item.name}
-        </Link>
-      ))}
-    </div>
-  );
-})}
+                      return (
+                        <div key={link.name}>
+                          <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">
+                            {link.name}
+                          </p>
+                          {link.dropdown.map((item) => (
+                            <Link
+                              key={item.name}
+                              to={item.path}
+                              className="block px-6 py-2 text-sm text-gray-700 hover:text-orange-500"
+                            >
+                              {item.name}
+                            </Link>
+                          ))}
+                        </div>
+                      );
+                    })}
                   </nav>
                 </div>
 
@@ -428,7 +580,39 @@ export default function Navbar() {
                     <div className="h-px bg-gray-100 mb-4" />
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-2">Account</p>
                     <div className="space-y-2">
+                      {profileIncomplete && (
+                        <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.28 }}>
+                          <button
+                            onClick={() => { navigate("/user-profile-filling"); setDrawerOpen(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold text-sm transition-colors duration-200"
+                          >
+                            <span className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                              <FaUser size={14} className="text-amber-500" />
+                            </span>
+                            Complete Profile
+                          </button>
+                        </motion.div>
+                      )}
                       <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}>
+                        <button
+                          onClick={() => { goToJobPostsTab(); setDrawerOpen(false); }}
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-sm transition-colors duration-200"
+                        >
+                          <span className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                              <FaBell size={14} className="text-orange-500" />
+                            </span>
+                            Job Notifications
+                          </span>
+                          <span className={jobsBellCount.showNew
+                            ? "text-xs font-black px-2 py-1 rounded-full bg-green-500 text-white"
+                            : "text-xs font-black px-2 py-1 rounded-full bg-orange-500 text-white"
+                          }>
+                            {jobsBellCount.showNew ? `New ${jobsBellCount.displayCount}` : `Active ${jobsBellCount.displayCount}`}
+                          </span>
+                        </button>
+                      </motion.div>
+                      <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.38 }}>
                         <button
                           onClick={() => { navigate("/user-dashboard"); setDrawerOpen(false); }}
                           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-sm transition-colors duration-200"
@@ -439,7 +623,7 @@ export default function Navbar() {
                           Dashboard
                         </button>
                       </motion.div>
-                      <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.42 }}>
+                      <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.45 }}>
                         <button
                           onClick={() => { logout(navigate); setDrawerOpen(false); }}
                           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-sm transition-colors duration-200"
@@ -455,7 +639,7 @@ export default function Navbar() {
                 )}
 
                 {/* SOCIAL MEDIA */}
-                <div className="px-4 pb-6">
+                {/* <div className="px-4 pb-6">
                   <div className="h-px bg-gray-100 mb-4" />
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 px-2">Follow Us</p>
                   <div className="grid grid-cols-5 gap-2">
@@ -475,7 +659,7 @@ export default function Navbar() {
                       </motion.a>
                     ))}
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* DRAWER FOOTER */}

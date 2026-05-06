@@ -1,13 +1,13 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import loginImg from "../assets/bg-images/Login.png";
+import loginImg from "../assets/bg-images/Login.webp";
 import { Link, useNavigate } from "react-router-dom";
 import AnimatedBg from "../components/Animate";
 import { toast } from "react-toastify";
 
 export default function Register() {
-  const { register, verifyRegisterOtp, loading } = useAuth();
+  const { register, verifyRegisterOtp, loginPendingRegisteredUser, checkProfile, storePendingRegisterCredentials, loading } = useAuth();
   const navigate = useNavigate();
 
   // Registration form state
@@ -24,11 +24,13 @@ export default function Register() {
   
   // OTP state
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showRegisterSuccessModal, setShowRegisterSuccessModal] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = useState("");
   const [timer, setTimer] = useState(300); // 5 minutes
   const [canResend, setCanResend] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [autoLoginLoading, setAutoLoginLoading] = useState(false);
   
   const inputRefs = useRef([]);
 
@@ -112,13 +114,42 @@ export default function Register() {
       const res = await verifyRegisterOtp(registeredEmail, otpString);
       
       if (res?.status) {
-        toast.success("Account created successfully! 🎉 Please login.");
-        navigate("/login");
+        toast.success("Account created successfully! 🎉");
+        setShowOtpModal(false);
+        setShowRegisterSuccessModal(true);
       } else {
         setOtpError(res?.message || "Invalid OTP. Please try again.");
       }
     } catch (err) {
       setOtpError("OTP verification failed. Please try again.");
+    }
+  };
+
+  const handleGoToLogin = async () => {
+    setAutoLoginLoading(true);
+    setShowRegisterSuccessModal(false);
+
+    try {
+      const res = await loginPendingRegisteredUser(registeredEmail, password);
+
+      if (!res?.status) {
+        navigate("/login", {
+          state: {
+            email: registeredEmail,
+            autoLoginNewUser: true,
+          },
+        });
+        return;
+      }
+
+      const profileComplete = await checkProfile(res.token);
+      if (profileComplete) {
+        navigate("/");
+      } else {
+        navigate("/user-profile-filling", { state: { email: registeredEmail } });
+      }
+    } finally {
+      setAutoLoginLoading(false);
     }
   };
 
@@ -199,6 +230,8 @@ export default function Register() {
       const res = await register(registrationData);
       
       if (res?.status) {
+        storePendingRegisterCredentials(email, password);
+        localStorage.setItem("registerEmail", email);
         setRegisteredEmail(email);
         setShowOtpModal(true);
         setTimer(300);
@@ -232,7 +265,7 @@ export default function Register() {
             <img
               src={loginImg}
               alt="Register illustration"
-              className="object-contain max-h-[500px] w-full rounded-3xl shadow-2xl shadow-orange-200"
+              className="object-contain max-h-[400px] w-full rounded-3xl "
               onError={(e) => {
                 e.target.src = "https://via.placeholder.com/500x500?text=Register+Image";
               }}
@@ -548,6 +581,41 @@ export default function Register() {
                 </p>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Register Success Modal */}
+      {showRegisterSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 flex flex-col items-center text-center animate-[fadeInUp_0.3s_ease]">
+            <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-5 shadow-inner">
+              <span className="text-4xl">🎉</span>
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              Registration Successful
+            </h2>
+
+            <p className="text-gray-500 text-base leading-relaxed mb-2">
+              Your account is ready. Proceed to  <span className="text-orange-500 font-semibold"> complete  your profile</span> to get
+              <span className="text-orange-500 font-semibold"> personalised job alerts</span> {" "}
+              on your dashboard.
+            </p>
+
+            <p className="text-gray-400 text-sm mb-8">
+              It only takes a few minutes.
+            </p>
+
+            <button
+              onClick={handleGoToLogin}
+              disabled={autoLoginLoading}
+              className="w-full py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition shadow-lg shadow-orange-200"
+            >
+              {autoLoginLoading ? "Signing you in..." : "Login and Fill Your Profile"}
+            </button>
           </div>
         </div>
       )}

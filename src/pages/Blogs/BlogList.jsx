@@ -442,7 +442,7 @@
       {/* Title */}
       <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
         Your Career,<br />
-        <em className="text-orange-500 not-italic">Beautifully Guided</em>
+        <em className="text-orange-500 not-italic">Mindfully Guided</em>
       </h1>
 
       {/* Subtitle */}

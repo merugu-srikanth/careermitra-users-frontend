@@ -6,6 +6,7 @@ import {
   FaMedal, FaChartLine, FaBullseye
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
+import { Link } from "react-router-dom";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const stats = [
@@ -20,7 +21,7 @@ const pillars = [
   { icon: <FaUsers size={20} />, title: "Inclusive Access", desc: "Bridging the gap for students from Tier-2 cities and rural areas who face socio-economic or academic barriers.", color: "green" },
   { icon: <FaLightbulb size={20} />, title: "Informed Decisions", desc: "Accurate, verified, and timely guidance so every aspirant can make the right career choices with confidence.", color: "amber" },
   { icon: <FaHandshake size={20} />, title: "Community Trust", desc: "Built on decades of public service and governance, our credibility comes from lived experience.", color: "blue" },
-  { icon: <FaChartLine size={20} />, title: "Growth Mindset", desc: "We don't just share opportunities — we help you build the skills and mindset to succeed in them.", color: "purple" },
+  { icon: <FaChartLine size={20} />, title: "Growth Mindset", desc: "We not only share opportunities — we help you build the skills and mindset to succeed in them.", color: "purple" },
   { icon: <FaBullseye size={20} />, title: "Goal-Oriented", desc: "Every interaction is designed around your specific goals, background, and aspirations — not a generic template.", color: "rose" },
 ];
 
@@ -156,10 +157,10 @@ function AboutHero() {
       >
         <SectionLabel text="Our Story" color="orange" />
 
-        <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl font-black text-gray-900 leading-tight mb-6">
-          Empowering Youth Through{" "}
-          <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Trusted</span>{" "}
-          <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">Guidance</span>
+        <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl font-black text-gray-900 leading-tight mb-6">
+          Awareness Ignites,
+          <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"> Guidance {" "}</span>{" "}
+          <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">Inspires</span>
         </motion.h1>
 
         <motion.p variants={fadeUp} className="text-gray-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
@@ -174,7 +175,7 @@ function AboutHero() {
         >
           <FaQuoteLeft className="text-orange-300 mb-3 mx-auto" size={28} />
           <p className="text-gray-700 font-medium text-base md:text-lg italic leading-relaxed">
-            "We spent 30 + years serving the government. Now we serve the youth who will shape it."
+            "We spent 30 + years serving the government. Now we serve the youth to shape their future."
           </p>
           <p className="text-orange-500 font-semibold text-sm mt-3">— Founding Team, Career Mitra</p>
         </motion.div>
@@ -245,7 +246,7 @@ function VisionSection() {
                 </p>
                 <div className="mt-6 pt-6 border-t border-orange-400">
                   <p className="text-orange-100 text-sm leading-relaxed">
-                    Career Mitra exists to introduce and support <span className="text-white font-bold">alternative, more sustainable</span> career options, especially in the public sector.
+                    Career Mitra aims to introduce and support <span className="text-white font-bold">alternative, more sustainable</span> career options, especially in the public service.
                   </p>
                 </div>
               </div>
@@ -490,33 +491,34 @@ function CTASection() {
               transition={{ duration: 3, repeat: Infinity }}
               className="text-5xl mb-4"
             >🤝</motion.div>
-            <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
-              Ready to Begin Your {" "}
-              <span className="text-orange-200">Government Career?</span>
+            <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
+              From Aspirations to Achievements... {" "}  <br />
+              <span className="text-orange-200 text-3xl italic"> Begin Your Journey Today</span>
             </h2>
             <p className="text-orange-100 text-sm leading-relaxed mb-8 max-w-md mx-auto">
-              Join hundreds of aspirants who found their path with Career Mitra. Your future in public service starts with a single conversation.
+              Join hundreds of aspirants who found their path with <span className="text-green-800 font-bold  italic"> "Career Mitra" </span>. Your future in  <span className="text-green-800 font-bold italic"> " public service" </span> starts with a single conversation.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button
+              <Link to="/contact" 
+              onClick={navigate => navigate("/contact-us")}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={scrollToContact}
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-orange-600 font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
+                className="flex items-center justify-center gap-2 px-15 py-4 bg-white text-orange-600 font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
               >
                 Get in Touch
                 <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
                   <FaArrowRight size={13} />
                 </motion.span>
-              </motion.button>
-              <motion.button
+              </Link>
+              {/* <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => document.getElementById("vision")?.scrollIntoView({ behavior: "smooth" })}
                 className="flex items-center justify-center gap-2 px-8 py-4 bg-orange-600 text-white font-bold rounded-2xl border border-orange-400 hover:bg-orange-700 transition-all duration-300 text-sm"
               >
                 <FaStar size={13} /> Learn More
-              </motion.button>
+              </motion.button> */}
             </div>
           </div>
         </motion.div>

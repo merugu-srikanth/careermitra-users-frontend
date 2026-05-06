@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { State, City } from "country-state-city";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Confetti from "react-confetti";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SEO from "../components/SEO";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
-const API_PROFILE = "https://g2u.mavenerp.in/g2uapi/public/api/profile";
+const API_PROFILE = "https://careermitra.in/api/public/api/profile";
 
 const CURRENT_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Completed"];
 
@@ -401,10 +401,17 @@ export default function Userprofilefillingpage({ onClose }) {
   const location = useLocation();
 
   // ── UI state
+  const [profileData, setProfileData] = useState(null);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [prefOpen, setPrefOpen] = useState(false);
+  const [prefPlacement, setPrefPlacement] = useState("bottom");
+  const [prefMenuMaxHeight, setPrefMenuMaxHeight] = useState(320);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(
+    () => !!(location?.state?.email)
+  );
+  const prefButtonRef = useRef(null);
 
   // ── Form state
   const [personal, setPersonal] = useState({
@@ -439,9 +446,26 @@ export default function Userprofilefillingpage({ onClose }) {
   const needsInter = q === "12th" || isGrad;
 
   // ── Prefs
-  const activeCatCount = PREF_CATEGORIES.filter((cat) =>
-    cat.options.some((opt) => selectedPrefs.includes(opt))
-  ).length;
+
+  useEffect(() => {
+    if (!prefOpen || !prefButtonRef.current) return;
+
+    const rect = prefButtonRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const gap = 8;
+    const minMenuHeight = 180;
+    const maxMenuHeight = 380;
+    const spaceBelow = viewportHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+
+    if (spaceBelow >= minMenuHeight || spaceBelow >= spaceAbove) {
+      setPrefPlacement("bottom");
+      setPrefMenuMaxHeight(Math.max(minMenuHeight, Math.min(maxMenuHeight, spaceBelow)));
+    } else {
+      setPrefPlacement("top");
+      setPrefMenuMaxHeight(Math.max(minMenuHeight, Math.min(maxMenuHeight, spaceAbove)));
+    }
+  }, [prefOpen]);
 
   // ─── GET Profile ─────────────────────────────────────────────────────────
 
@@ -453,6 +477,7 @@ export default function Userprofilefillingpage({ onClose }) {
       .then((res) => {
         if (!res.data?.status) return;
         const api = res.data.data || res.data || {};
+        setProfileData(api);
         const ed = api.education || {};
 
         // Find stateCode from state name
@@ -614,11 +639,10 @@ export default function Userprofilefillingpage({ onClose }) {
 
   // ─── Pref handlers ────────────────────────────────────────────────────────
 
-  function togglePref(opt, catOptions) {
+  function togglePref(opt) {
     setSelectedPrefs((prev) => {
       if (prev.includes(opt)) return prev.filter((p) => p !== opt);
-      const catActive = catOptions.some((o) => prev.includes(o));
-      if (!catActive && activeCatCount >= MAX_PREF) return prev;
+      if (prev.length >= MAX_PREF) return prev;
       return [...prev, opt];
     });
   }
@@ -796,11 +820,11 @@ export default function Userprofilefillingpage({ onClose }) {
       }
 
       if (res.data?.status) {
-        toast.success(res.data?.message || "Profile saved successfully!");
+        toast.success("Profile created successfully! Redirecting to Student Dashboard...");
         setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3500);
+        setTimeout(() => setShowConfetti(false), 3000);
         if (onClose) onClose();
-        setTimeout(() => navigate("/user-dashboard"), 3600);
+        setTimeout(() => navigate("/user-dashboard"), 3200);
       } else {
         toast.error(res.data?.message || "Save failed");
       }
@@ -1047,9 +1071,12 @@ export default function Userprofilefillingpage({ onClose }) {
   // ─── Render Preferences ───────────────────────────────────────────────────
 
   function renderPreferences() {
+    const maxReached = selectedPrefs.length >= MAX_PREF;
+
     return (
       <div className="relative">
         <button
+          ref={prefButtonRef}
           type="button"
           onClick={() => setPrefOpen((p) => !p)}
           className="w-full flex justify-between items-center border-2 border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:border-orange-400 transition-colors"
@@ -1063,15 +1090,18 @@ export default function Userprofilefillingpage({ onClose }) {
         </button>
 
         {prefOpen && (
-          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-64 overflow-y-auto p-3">
+          <div
+            className={`absolute z-50 left-0 right-0 bg-white border-2 border-gray-200 rounded-xl shadow-xl overflow-y-auto p-3 ${
+              prefPlacement === "bottom" ? "top-full mt-1" : "bottom-full mb-1"
+            }`}
+            style={{ maxHeight: `${prefMenuMaxHeight}px` }}
+          >
             <p className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-3">
-              Select up to <strong>{MAX_PREF} categories</strong>. Selected: <strong>{activeCatCount}</strong>
+              Select up to <strong>{MAX_PREF} preferences</strong>. Selected: <strong>{selectedPrefs.length}</strong>
             </p>
             {PREF_CATEGORIES.map((cat) => {
-              const catActive = cat.options.some((o) => selectedPrefs.includes(o));
-              const catDisabled = !catActive && activeCatCount >= MAX_PREF;
               return (
-                <div key={cat.key} className={`mb-3 ${catDisabled ? "opacity-40 pointer-events-none" : ""}`}>
+                <div key={cat.key} className="mb-3">
                   <p className="text-xs font-bold text-orange-500 uppercase tracking-wide mb-1">{cat.label}</p>
                   <div className="flex flex-wrap gap-2">
                     {cat.options.map((opt) => {
@@ -1089,8 +1119,8 @@ export default function Userprofilefillingpage({ onClose }) {
                               type="checkbox"
                               className="accent-orange-500"
                               checked={checked}
-                              disabled={!checked && catDisabled}
-                              onChange={() => togglePref(opt, cat.options)}
+                              disabled={!checked && maxReached}
+                              onChange={() => togglePref(opt)}
                             />
                             {opt}
                           </label>
@@ -1151,12 +1181,56 @@ export default function Userprofilefillingpage({ onClose }) {
   // ─── JSX ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-100 py-20 pb-16">
+    <div className="min-h-screen relative bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-100 py-20 pb-16">
+
+      {/* ── Welcome Modal ── */}
+      {/* {showWelcomeModal && (
+        <div className="absolute bottom-30 right-0  z-50 flex items-center justify-center p-4">
+        
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 flex flex-col items-center text-center animate-[fadeInUp_0.3s_ease]">
+            <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-5 shadow-inner">
+              <span className="text-4xl animate-bounce"> 😒</span>
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              Your Profie is Incomplete!
+            </h2>
+
+            <p className="text-gray-500 text-base leading-relaxed mb-2">
+              Fill your profile details and unlock{" "}
+              <span className="text-orange-500 font-semibold">personalised job alerts </span>{" "}
+              tailored just for you in your dashboard.
+            </p>
+
+            <p className="text-gray-400 text-sm mb-8">
+              It only takes a few minutes — let's get started!
+            </p>
+
+       
+            <div className="flex gap-3 w-full">
+              <Link to="/"
+                onClick={() => setShowWelcomeModal(false)}
+              
+                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-semibold hover:bg-gray-50 transition"
+              >
+                Later
+              </Link>
+              <button
+                onClick={() => setShowWelcomeModal(false)}
+                className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition shadow-lg shadow-orange-200"
+              >
+                Okey..
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
+
       {/* Confetti */}
         <SEO
         title="User Profile Filling | Career Mitra"
-        description="Complete your user profile to get personalized job recommendations and access exclusive career resources."
-        keywords="user profile, job recommendations, career resources, personalized dashboard"
+        description="Complete your user profile to get personalized job alerts and access exclusive career resources."
+        keywords="user profile, job alerts, career resources, personalized dashboard"
         url="https://www.careermitra.in/user-profile-filling"
       />
       {showConfetti && (
@@ -1212,13 +1286,36 @@ export default function Userprofilefillingpage({ onClose }) {
         </div>
 
         {/* ── Card ── */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl overflow-visible">
 
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-amber-400 px-6 py-4 text-center">
-            <h2 className="text-white text-lg font-extrabold tracking-wide">
+           <h2 className="text-white text-lg font-extrabold tracking-wide">
               CAREER MITRA — Your Gateway to Government Opportunities
             </h2>
+            {!profileData?.education?.qualification_level && (
+            <div className=" mx-auto bg-white/20 border border-gray-100 shadow-md rounded-2xl p-5 py-2">
+  
+  <p className="text-sm text-gray-700 leading-relaxed">
+    <span className="block font-semibold text-orange-500 mb-1">
+      You're Almost There!
+    </span>
+
+    Your profile is 
+    <span className="font-semibold text-green-600">{" "}{profileData?.education?.qualification_level ? 100 : 0}% complete</span>. 
+    Please complete your personal and educational details to continue.
+
+    <span className="block mt-4 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <span
+        className="block h-full bg-green-500 rounded-full transition-all duration-500"
+        style={{ width: `${profileData?.education?.qualification_level ? 100 : 0}%` }}
+      ></span>
+    </span>
+  </p>
+
+</div>
+            )}
+           
           </div>
 
           {/* Body */}

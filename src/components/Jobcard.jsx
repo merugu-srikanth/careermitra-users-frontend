@@ -77,20 +77,53 @@ function JobGridCard({
     return d;
   };
 
+  const getDaysLeftLabel = (d) => {
+    if (!d) return "";
+    const deadline = new Date(d);
+    if (Number.isNaN(deadline.getTime())) return "";
+
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / msPerDay);
+
+    if (daysLeft < 0) return "Expired";
+    if (daysLeft === 0) return "Last day";
+    if (daysLeft === 1) return "1 day left";
+    return `${daysLeft} days left`;
+  };
+
+  const isActive = Boolean(lastDate) && !isExpired;
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden h-full hover:shadow-lg transition-shadow">
+      <style>{`@keyframes daysZoomBlink { 0% { opacity: 0.75; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.07); } 100% { opacity: 0.75; transform: scale(0.95); } }`}</style>
       <div className="h-0.75 bg-orange-500 shrink-0" />
       <div className="flex flex-col gap-3 p-2 flex-1">
-        {category && (
-          <span className="self-start text-[11px] font-medium bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full">
-            {category}
-          </span>
-        )}
+        <div className="flex items-center justify-between gap-2">
+          {category ? (
+            <span className="self-start text-[11px] font-medium bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full">
+              {category}
+            </span>
+          ) : (
+            <span className="self-start text-[11px] font-medium bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full">
+              Job
+            </span>
+          )}
+
+          {!!lastDate && (
+            <span
+              className={`text-[11px] font-semibold ${isExpired ? "text-red-500" : "text-green-600"}`}
+              style={!isExpired ? { animation: "daysZoomBlink 1s ease-in-out infinite" } : undefined}
+            >
+              {isActive ? "Active - " : ""}{getDaysLeftLabel(lastDate)}
+            </span>
+          )}
+        </div>
         <h2 className="text-S font-medium text-gray-900 leading-snug line-clamp-2">
           {title}
         </h2>
         <div className="relative">
-          <div className={!isLoggedIn ? "pointer-events-none select-none blur-[3px]" : ""}>
+          <div>
             <hr className="border-gray-100" />
             <div className="flex flex-col gap-2 p-2">
               <div className="flex items-start gap-2">
@@ -106,19 +139,23 @@ function JobGridCard({
               {age && (
                 <div className="flex items-center gap-2">
                   <PersonIcon /><span className="text-sm text-gray-500 w-20 shrink-0">Age limit</span>
-                  <span className="text-sm font-medium text-gray-800">{age} years</span>
+                  <span className="text-sm font-medium text-gray-800">{isLoggedIn ? `${age} years` : "Login required"}</span>
                 </div>
               )}
               {noOfPosts && (
                 <div className="flex items-center gap-2">
                   <PostsIcon /><span className="text-sm text-gray-500 w-20 shrink-0">Vacancies</span>
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                    <PostsIcon /> {noOfPosts} {noOfPosts === 1 ? "Post" : "Posts"}
-                  </span>
+                  {isLoggedIn ? (
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      <PostsIcon /> {noOfPosts} {noOfPosts === 1 ? "Post" : "Posts"}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-medium text-gray-800">Login required</span>
+                  )}
                 </div>
               )}
             </div>
-            {qualifications && (
+            {qualifications && isLoggedIn && (
               <>
                 <hr className="border-gray-100" />
                 <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 flex-1">
@@ -150,13 +187,15 @@ function JobGridCard({
           </span>
   </div>
 
+
+
   <button
     onClick={handleApply}
     disabled={isExpired}
-    className={`relative inline-flex items-center justify-center overflow-hidden text-sm font-medium px-1 py-1.5 rounded-lg shrink-0 whitespace-nowrap self-end sm:self-auto min-w-[130px]
+    className={`relative inline-flex items-center justify-center overflow-hidden text-sm font-medium px-1 py-1.5 rounded-lg shrink-0 whitespace-nowrap self-end sm:self-auto min-w-32.5
     ${isExpired
       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-      : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent before:translate-x-[-100%] before:animate-[shine_1.2s_linear_infinite] hover:before:animate-none"
+      : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-white/40 before:to-transparent before:-translate-x-full before:animate-[shine_1.2s_linear_infinite] hover:before:animate-none"
     }`}
   >
     <span className="relative z-10">
@@ -228,16 +267,16 @@ function JobTableRow({
       </td>
       <td className="px-4 py-3 text-sm text-gray-700">{org}</td>
       <td className="px-4 py-3 text-sm text-gray-700">{location || "-"}</td>
-      <td className="px-4 py-3 text-sm text-gray-700">{age ? `${age} years` : "-"}</td>
+      <td className="px-4 py-3 text-sm text-gray-700">{isLoggedIn ? (age ? `${age} years` : "-") : "Login required"}</td>
       <td className="px-4 py-3">
-        {noOfPosts ? (
+        {noOfPosts && isLoggedIn ? (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded-full">
             <PostsIcon /> {noOfPosts}
           </span>
         ) : "-"}
       </td>
       <td className="px-4 py-3">
-        <p className="text-xs text-gray-600 line-clamp-2 max-w-xs">{qualifications || "-"}</p>
+        <p className="text-xs text-gray-600 line-clamp-2 max-w-xs">{isLoggedIn ? (qualifications || "-") : "Login to view"}</p>
       </td>
       <td className="px-4 py-3 whitespace-nowrap">
         <div className="flex items-center gap-1.5">
@@ -257,7 +296,7 @@ function JobTableRow({
       </td>
       <td className="px-4 py-3">
         <button onClick={handleApply} disabled={isExpired}
-          className={`inline-flex min-w-[116px] items-center justify-center text-xs font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap
+          className={`inline-flex min-w-29 items-center justify-center text-xs font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap
             ${isExpired ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"}`}>
           {isExpired ? "Closed" : isLoggedIn ? "Apply" : "Register & Apply"}

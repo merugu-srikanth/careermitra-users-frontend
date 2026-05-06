@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
@@ -49,7 +49,8 @@ const Ic = {
 const cx = (...a) => a.filter(Boolean).join(" ");
 
 /* ═══════════════ CONSTANTS ═══════════════ */
-const API_BASE = "https://g2u.mavenerp.in/g2uapi/public/api";
+const API_BASE = "https://careermitra.in/api/public/api";
+const TAB_IDS = ["profile", "jobs", "announcements", "media", "settings"];
 
 /* ═══════════════ UTILS ═══════════════ */
 const isEV = (v) => {
@@ -321,11 +322,11 @@ const buildSections = (profile, age) => {
   if (!isEV(profile?.date_of_birth) && age) personal.age = `${age} years`;
   push("Personal Information", <Ic.User className="w-4 h-4" />, personal);
 
-  used.add("subscription"); used.add("all_subscriptions");
+  // used.add("subscription"); used.add("all_subscriptions");
   const sub = profile.subscription || null;
   const allSubs = Array.isArray(profile.all_subscriptions) ? profile.all_subscriptions : [];
   if (sub && typeof sub === "object") push("Subscription", <Ic.Layers className="w-4 h-4" />, { plan_name: sub.plan_name, amount: fmtINR(sub.amount), status: normSubStatus(sub.status), start_date: sub.start_date, end_date: sub.end_date });
-  else push("Subscription", <Ic.Layers className="w-4 h-4" />, { status: "Not specified" });
+  // else push("Subscription", <Ic.Layers className="w-4 h-4" />, { status: "Not specified" });
   if (allSubs.length) sections.push({ title: "All Subscriptions", icon: <Ic.Layers className="w-4 h-4" />, isArray: true, data: allSubs.map(s => ({ plan_name: s.plan_name, amount: fmtINR(s.amount), status: normSubStatus(s.status), start_date: s.start_date, end_date: s.end_date })) });
 
   used.add("education");
@@ -529,7 +530,7 @@ const JobsPanel = ({ token }) => {
                     <div className="text-xs text-slate-400">Posted {fmtDate2(job.posted_date)} · <span className={isExp ? "text-red-500 font-semibold" : "text-green-600 font-semibold"}>Due {fmtDate2(job.application_deadline)}</span></div>
                     {isExp ? <span className="text-xs text-slate-400 italic">Closed</span> : job.apply_link ? <a href={job.apply_link} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-sm shadow-orange-200">Apply <Ic.Ext className="w-2.5 h-2.5" /></a> : <span className="text-xs text-slate-400">No link</span>}
                   </div>
-                  {job.comments && <div className="mt-2 text-xs text-slate-500 bg-orange-50 rounded-xl px-3 py-2 border border-orange-100">💬 {toTC(job.comments)}</div>}
+                  {/* {job.comments && <div className="mt-2 text-xs text-slate-500 bg-orange-50 rounded-xl px-3 py-2 border border-orange-100">💬 {toTC(job.comments)}</div>} */}
                 </div>
               </div>
             );
@@ -566,17 +567,19 @@ const JobsPanel = ({ token }) => {
               <div className={cx("h-1.5 w-full", isExp ? "bg-slate-300" : "bg-gradient-to-r from-orange-400 to-amber-400")} />
               <div className="flex items-center justify-between px-6 py-4 border-b border-orange-50"><div className="flex items-center gap-2 flex-wrap"><span className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full font-semibold">{toTC(selJob.job_type) || "Job"}</span>{isExp ? <span className="text-xs bg-red-100 text-red-600 px-2.5 py-1 rounded-full font-semibold">Closed</span> : <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-semibold">Live</span>}{dl !== null && dl >= 0 && dl <= 5 && !isExp && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-semibold">{dl}d left</span>}</div><button onClick={() => setSelJob(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-50 hover:bg-orange-100 text-orange-400"><Ic.X className="w-3.5 h-3.5" /></button></div>
               <div className="overflow-y-auto flex-1 p-6">
-                <h2 className="text-xl font-black text-slate-800 mb-4">{toTC(selJob.title)}</h2>
+                <h2 className="text-xl font-black text-orange-600 mb-4">{toTC(selJob.title)}</h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {[{ label: "Organization", val: toTC(selJob?.jobsource?.site_name) || "—", icon: <Ic.Bld className="w-3 h-3" /> }, { label: "Category", val: toTC(selJob?.jobsource?.category?.name) || "—", icon: <Ic.Tag className="w-3 h-3" /> }, { label: "Qualification", val: safe(selJob.qualifications), icon: <Ic.Grad className="w-3 h-3" /> }, { label: "Age Limit", val: safe(selJob.age ? selJob.age + " years" : "N/A"), icon: <span>🎂</span> }, { label: "No. of Posts", val: safe(selJob.no_of_posts), icon: <span>👥</span> }, { label: "Posted", val: fmtDate2(selJob.posted_date), icon: <Ic.Cal className="w-3 h-3" /> }, { label: "Deadline", val: fmtDate2(selJob.application_deadline), icon: <Ic.Clock className="w-3 h-3" />, accent: isExp ? "text-red-500" : "text-green-600" }, { label: "Job Type", val: toTC(selJob.job_type), icon: <Ic.Bag className="w-3 h-3" /> }].map(item => (
-                    <div key={item.label} className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+                  {[{ label: "Organization", val: toTC(selJob?.jobsource?.site_name) || "—", icon: <Ic.Bld className="w-3 h-3" /> }, { label: "Category", val: toTC(selJob?.jobsource?.category?.name) || "—", icon: <Ic.Tag className="w-3 h-3" /> },  { label: "Age Limit", val: safe(selJob.age ? selJob.age + " years" : "N/A"), icon: <span>🎂</span> }, { label: "No. of Posts", val: safe(selJob.no_of_posts), icon: <span>👥</span> }, { label: "Posted", val: fmtDate2(selJob.posted_date), icon: <Ic.Cal className="w-3 h-3" /> }, { label: "Deadline", val: fmtDate2(selJob.application_deadline), icon: <Ic.Clock className="w-3 h-3" />, accent: isExp ? "text-red-500" : "text-green-600" }, { label: "Qualification", val: safe(selJob.qualifications), icon: <Ic.Grad className="w-3 h-3" />, full: true }
+                  //  { label: "Job Type", val: toTC(selJob.job_type), icon: <Ic.Bag className="w-3 h-3" /> }
+                  ].map(item => (
+                    <div key={item.label} className={cx("bg-orange-50 rounded-xl p-3 border border-orange-100", item.full && "col-span-2")}>
                       <p className="text-xs text-orange-400 flex items-center gap-1.5 mb-1">{item.icon}{item.label}</p>
-                      <p className={cx("text-sm font-bold", item.accent || "text-slate-800")}>{item.val}</p>
-                      {item.label === "Deadline" && dl !== null && !isExp && <p className="text-xs text-green-500 mt-0.5">{dl} days left</p>}
+                      <p className={cx("text-sm font-normal", item.accent || "text-slate-800 justify")}>{item.val}</p>
+                      {item.label === "Deadline" && dl !== null && !isExp && <p className="text-xs text-red-500 mt-0.5">{dl} days left</p>}
                     </div>
                   ))}
                 </div>
-                {selJob.comments && <div className="mt-3 bg-orange-50 border border-orange-100 rounded-xl p-3"><p className="text-xs text-orange-700">💬 {toTC(selJob.comments)}</p></div>}
+                {/* {selJob.comments && <div className="mt-3 bg-orange-50 border border-orange-100 rounded-xl p-3"><p className="text-xs text-orange-700">💬 {toTC(selJob.comments)}</p></div>} */}
               </div>
               <div className="px-6 py-4 border-t border-orange-50 flex gap-3">
                 <button onClick={() => setSelJob(null)} className="flex-1 py-2.5 border border-orange-200 text-orange-500 rounded-xl text-sm font-semibold hover:bg-orange-50 transition-colors">Close</button>
@@ -751,7 +754,7 @@ const SettingsPanel = ({ token, email, navigate, handleLogout }) => {
           <div className="p-4 space-y-2">
             {[
               { label: "Edit Profile", desc: "Update your personal & education info", icon: <Ic.Edit className="w-4 h-4" />, color: "bg-orange-100 text-orange-600", action: () => navigate("/user-profile-filling"), hover: "hover:bg-orange-50 hover:border-orange-200" },
-              { label: "Reset Password", desc: "Change your account password", icon: <Ic.Lock className="w-4 h-4" />, color: "bg-blue-100 text-blue-600", action: () => setShowReset(true), hover: "hover:bg-blue-50 hover:border-blue-200" },
+              // { label: "Reset Password", desc: "Change your account password", icon: <Ic.Lock className="w-4 h-4" />, color: "bg-blue-100 text-blue-600", action: () => setShowReset(true), hover: "hover:bg-blue-50 hover:border-blue-200" },
               { label: "Logout", desc: "Sign out of your account", icon: <Ic.Logout className="w-4 h-4" />, color: "bg-red-100 text-red-500", action: handleLogout, hover: "hover:bg-red-50 hover:border-red-200", chevHover: "group-hover:text-red-500" },
             ].map(item => (
               <button key={item.label} onClick={item.action} className={cx("w-full flex items-center justify-between px-4 py-4 rounded-xl border border-orange-100 transition-all group", item.hover)}>
@@ -778,7 +781,11 @@ const SettingsPanel = ({ token, email, navigate, handleLogout }) => {
 const UserProfilePage = () => {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("profile");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    return TAB_IDS.includes(tab) ? tab : "profile";
+  });
   const [profile, setProfile] = useState(null);
   const [age, setAge] = useState("");
   const [loading, setLoading] = useState(true);
@@ -877,6 +884,13 @@ const UserProfilePage = () => {
   }, [token, activeTab, getSeenState]);
 
   useEffect(() => {
+    const tab = new URLSearchParams(location.search).get("tab");
+    if (TAB_IDS.includes(tab) && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [location.search, activeTab]);
+
+  useEffect(() => {
     if (activeTab === "jobs" || activeTab === "announcements") markTabAsSeen(activeTab);
   }, [activeTab, markTabAsSeen]);
 
@@ -933,27 +947,55 @@ const UserProfilePage = () => {
         url="https://www.careermitra.in/user-dashboard"
       />
       {/* ── HERO BANNER ── */}
-      <div className="bg-gradient-to-r rounded-3xl from-orange-500 via-orange-600 to-amber-500 mt-25 relative overflow-hidden">
+      <div className="bg-linear-to-r rounded-2xl md:rounded-3xl from-orange-500 via-orange-600 to-amber-500 mt-20 md:mt-25 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/8 rounded-full" />
           <div className="absolute -bottom-8 left-1/3 w-32 h-32 bg-orange-400/20 rounded-full" />
           <div className="absolute top-2 right-1/4 w-16 h-16 bg-amber-300/20 rounded-full" />
         </div>
-        <div className="max-w-7xl mx-auto px-5 py-5 relative">
-          <div className="flex items-center gap-4">
-            <AvatarSVG size={56} />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-black text-white leading-tight truncate">{profile.name || "User"}</h1>
-              <p className="text-orange-100 text-xs mb-2 truncate">{profile.email}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {headerTags.map(t => <span key={t} className="text-xs bg-white/20 text-white px-2.5 py-0.5 rounded-full font-semibold backdrop-blur-sm">{t}</span>)}
-                {profile.current_location && <span className="text-xs bg-white/15 text-white/90 px-2.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm"><Ic.Pin className="w-2.5 h-2.5" />{profile.current_location}</span>}
+        <div className="max-w-7xl mx-auto px-4 md:px-5 py-4 md:py-5 relative">
+          <div className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-center">
+            <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0 bg-white/10 border border-white/15 rounded-2xl p-3.5 md:p-0 md:bg-transparent md:border-0">
+              <AvatarSVG size={56} />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base md:text-lg font-black text-white leading-tight wrap-break-word md:truncate">{profile.name || "User"}</h1>
+                <p className="text-orange-100 text-xs mb-2 break-all md:truncate">{profile.email}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {headerTags.map(t => <span key={t} className="text-[11px] md:text-xs bg-white/20 text-white px-2.5 py-0.5 rounded-full font-semibold backdrop-blur-sm">{t}</span>)}
+                  {profile.current_location && <span className="text-[11px] md:text-xs bg-white/15 text-white/90 px-2.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm"><Ic.Pin className="w-2.5 h-2.5" />{profile.current_location}</span>}
+                </div>
               </div>
             </div>
-            <div className="border border-2 border-amber-400  rounded-2xl p-2">{profileCompletion < 100 && <button onClick={() => navigate("/user-profile-filling")} className=" text-white font-bold flex items-center gap-1 hover:text-white transition-colors">Complete your profile<Ic.ChevR className="w-3 h-3" /></button>}
-            </div>
 
-            {profileCompletion === 100 && <button onClick={() => navigate("/user-profile-filling")} className="shrink-0 px-3 py-2 bg-white hover:bg-white/80 text-orange-500 hover:text-black rounded-xl text-xs font-bold backdrop-blur-sm transition-colors flex items-center gap-1.5 border border-white/20"><Ic.Edit className="w-3 h-3" />Edit Your Profile</button>}
+            {profileCompletion < 100 && (
+              <button
+                onClick={() => navigate("/user-profile-filling")}
+                className="w-full md:w-auto md:shrink-0 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 border-2 border-amber-300 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+              >
+                Complete your profile
+                <Ic.ChevR className="w-3 h-3" />
+              </button>
+            )}
+
+            {profileCompletion === 100 && (
+              <button
+                onClick={() => navigate("/user-profile-filling")}
+                className="w-full md:w-auto md:shrink-0 px-3.5 py-2.5 bg-white hover:bg-white/85 text-orange-500 hover:text-black rounded-xl text-xs font-bold backdrop-blur-sm transition-colors flex items-center justify-center gap-1.5 border border-white/20"
+              >
+                <Ic.Edit className="w-3 h-3" />
+                Edit Your Profile
+              </button>
+            )}
+          </div>
+
+          <div className="md:hidden mt-3 bg-white/10 rounded-xl px-3 py-2 border border-white/15">
+            <div className="flex justify-between text-[11px] text-white/85 mb-1">
+              <span className="font-semibold">Profile Completion</span>
+              <span className="font-black text-white">{profileCompletion}%</span>
+            </div>
+            <div className="h-1.5 bg-white/25 rounded-full overflow-hidden">
+              <div className="h-full bg-white rounded-full transition-all duration-700" style={{ width: `${profileCompletion}%` }} />
+            </div>
           </div>
           {/* Progress */}
           {/* <div className="mt-4">
@@ -1007,8 +1049,14 @@ const UserProfilePage = () => {
                 </div>
                 {typeof t.count === "number" && (
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className={cx("text-[10px] font-black px-2 py-0.5 rounded-full", activeTab === t.id ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-600")}>{t.count}</span>
-                    {t.newCount > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">{t.newCount} new</span>}
+                    <span className={cx("text-[10px] font-black px-2 py-0.5 rounded-full", t.id === "jobs" ? "bg-orange-500 text-white" : (activeTab === t.id ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-600"))}>
+                      {t.id === "jobs" ? `Active ${t.count}` : t.count}
+                    </span>
+                    {(t.id === "jobs" || t.newCount > 0) && (
+                      <span className={cx("text-[9px] font-bold px-2 py-0.5 rounded-full text-white", t.id === "jobs" ? "bg-green-500" : "bg-red-500")}>
+                        {t.id === "jobs" ? `New ${t.newCount}` : `${t.newCount} new`}
+                      </span>
+                    )}
                   </div>
                 )}
               </button>
@@ -1036,17 +1084,34 @@ const UserProfilePage = () => {
         <main className="flex-1 min-w-0">
 
           {/* Mobile tab bar */}
-          <div className="md:hidden flex bg-white rounded-2xl border border-orange-100 shadow-sm p-1 gap-1 mb-4 overflow-x-auto">
+          <div className="md:hidden mb-4">
+            <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-orange-100 shadow-sm p-2">
             {NAV.map(t => (
-              <button key={t.id} onClick={() => setActiveTab(t.id)} className={cx("flex-1 min-w-[56px] flex flex-col items-center py-2 px-1 rounded-xl text-[10px] font-bold transition-all gap-1", activeTab === t.id ? "bg-orange-500 text-white shadow-sm" : "text-slate-400 hover:bg-orange-50")}>
-                {t.icon}
-                <span>{t.label}</span>
-                {typeof t.count === "number" && (
-                  <span className={cx("text-[9px] px-1.5 py-0.5 rounded-full font-black", activeTab === t.id ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600")}>{t.count}</span>
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={cx(
+                  "relative min-h-18 px-2 py-2.5 rounded-xl text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-1.5 border",
+                  activeTab === t.id
+                    ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                    : "bg-orange-50/40 text-slate-500 border-orange-100 hover:bg-orange-50"
                 )}
-                {t.newCount > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-black bg-red-500 text-white">+{t.newCount}</span>}
+              >
+                <span className={activeTab === t.id ? "text-white" : "text-orange-500"}>{t.icon}</span>
+                <span className="leading-tight text-center">{t.label}</span>
+                {typeof t.count === "number" && (
+                  <span className={cx("text-[9px] px-1.5 py-0.5 rounded-full font-black", t.id === "jobs" ? "bg-orange-500 text-white" : (activeTab === t.id ? "bg-white/20 text-white" : "bg-white text-orange-600 border border-orange-100"))}>
+                    {t.id === "jobs" ? `Active ${t.count}` : t.count}
+                  </span>
+                )}
+                {(t.id === "jobs" || t.newCount > 0) && (
+                  <span className={cx(t.id === "jobs" ? "text-[9px] px-1.5 py-0.5 rounded-full font-black bg-green-500 text-white" : "absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded-full font-black bg-red-500 text-white")}>
+                    {t.id === "jobs" ? `New ${t.newCount}` : `+${t.newCount}`}
+                  </span>
+                )}
               </button>
             ))}
+            </div>
           </div>
 
           {/* Incomplete banner */}

@@ -1,14 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import loginImg from "../assets/bg-images/Login.png";
-import { Link, useNavigate } from "react-router-dom";
+import loginImg from "../assets/bg-images/Login.webp";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AnimatedBg from "../components/Animate";
 import { toast } from "react-toastify";
 
 export default function Login() {
-  const { loginWithPassword, sendOtp, verifyOtp, forgotPassword } = useAuth();
+  const { loginWithPassword, loginPendingRegisteredUser, sendOtp, verifyOtp, forgotPassword, checkProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // login | otp | forgot
   const [step, setStep] = useState("login");
@@ -38,8 +39,12 @@ export default function Login() {
         } else {
           localStorage.removeItem("rememberedEmail");
         }
-        toast.success("Login Successful! 🎉");
-        navigate("/");
+        const profileComplete = await checkProfile(res.token);
+        if (profileComplete) {
+          navigate("/");
+        } else {
+          navigate("/user-profile-filling", { state: { email } });
+        }
       }
     } catch (err) {
       setError("Login failed. Please try again.");
@@ -85,7 +90,12 @@ export default function Login() {
         setError("Invalid OTP. Please try again");
       } else {
         toast.success("OTP Login Successful! 🎉");
-        navigate("/");
+        const profileComplete = await checkProfile(res.token);
+        if (profileComplete) {
+          navigate("/");
+        } else {
+          navigate("/user-profile-filling", { state: { email } });
+        }
       }
     } catch (err) {
       setError("OTP verification failed. Please try again.");
@@ -131,14 +141,67 @@ export default function Login() {
     setError("");
   };
 
-  // Load remembered email
-  useState(() => {
-    const rememberedEmail = localStorage.getItem("rememberedEmail");
-    if (rememberedEmail) {
-      setEmail(rememberedEmail);
-      setRememberMe(true);
+  // Load remembered email / email passed from register
+  useEffect(() => {
+    if (location?.state?.email) {
+      setEmail(location.state.email);
+      if (!location?.state?.autoLoginNewUser) {
+        return;
+      }
     }
-  }, []);
+
+    if (!location?.state?.autoLoginNewUser) {
+      const rememberedEmail = localStorage.getItem("rememberedEmail");
+      if (rememberedEmail) {
+        setEmail(rememberedEmail);
+        setRememberMe(true);
+      }
+    }
+  }, [location?.state?.autoLoginNewUser, location?.state?.email]);
+
+  useEffect(() => {
+    if (!location?.state?.autoLoginNewUser || !location?.state?.email) return;
+
+    let isActive = true;
+
+    const autoLogin = async () => {
+      setError("");
+      setLoading(true);
+
+      try {
+        const res = await loginPendingRegisteredUser(location.state.email);
+        if (!isActive) return;
+
+        if (!res?.status) {
+          setError(res?.message || "Auto login failed. Please sign in.");
+          return;
+        }
+
+        const profileComplete = await checkProfile(res.token);
+        if (!isActive) return;
+
+        if (profileComplete) {
+          navigate("/");
+        } else {
+          navigate("/user-profile-filling", { state: { email: location.state.email } });
+        }
+      } catch {
+        if (isActive) {
+          setError("Auto login failed. Please sign in.");
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    };
+
+    autoLogin();
+
+    return () => {
+      isActive = false;
+    };
+  }, [checkProfile, location?.state?.autoLoginNewUser, location?.state?.email, loginPendingRegisteredUser, navigate]);
 
   const subtitleMap = {
     login: "Enter your credentials to access your account",
@@ -153,12 +216,12 @@ export default function Login() {
       <div className="max-w-7xl bg-white rounded-2xl shadow-xl grid md:grid-cols-2 overflow-hidden relative z-10">
 
         {/* LEFT SIDE IMAGE */}
-        <div className="hidden md:flex items-center justify-center p-8">
+        <div className="hidden md:flex items-center justify-center p-8 border-r-2 border-orange-100">
           <div className="w-full h-full flex items-center justify-center">
             <img
               src={loginImg}
               alt="Login illustration"
-              className="object-contain max-h-[500px] w-full rounded-3xl shadow-2xl shadow-orange-200"
+              className="object-contain max-h-[400px] w-full rounded-3xl "
               onError={(e) => {
                 e.target.src = "https://via.placeholder.com/500x500?text=Login+Image";
               }}
