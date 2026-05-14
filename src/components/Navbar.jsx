@@ -12,7 +12,8 @@ import {
   FaUser, FaEnvelope, FaBell
 } from "react-icons/fa";
 
-const API_BASE = "https://careermitra.in/api/public/api";
+const DEFAULT_API_BASE_URL = "https://careermitra.tech";
+const API_BASE = `${(import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "")}/api`;
 
 /* ─── SOCIAL LINKS ─────────────────────────────────────────────────────────── */
 const socials = [
@@ -87,8 +88,11 @@ export default function Navbar() {
   useEffect(() => {
     if (!token) return;
     axios
-      .get(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setProfileData(res.data.data))
+      .get(`https://careermitra.tech/api/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        const payload = res?.data?.data || null;
+        setProfileData(payload?.user && typeof payload.user === "object" ? { ...payload, ...payload.user } : payload);
+      })
       .catch(console.error);
   }, [token]);
 
@@ -116,15 +120,15 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
-  const displayName = profileData?.name || user?.name || "User";
-  const displayEmail = profileData?.email || user?.email || "";
-  const profileCompletion = profileData?.education?.qualification_level ? 100 : 0;
+  const displayName = profileData?.user?.name || profileData?.name || user?.name || "User";
+  const displayEmail = profileData?.user?.email || profileData?.email || user?.email || "";
+  const profileCompletion = (profileData?.education?.qualification_level || profileData?.user?.education?.qualification_level) ? 100 : 0;
   const profileIncomplete = !!token && profileCompletion < 100;
 
   const seenStorageKey = useMemo(() => {
-    const ident = profileData?.id || profileData?.email || user?.id || user?.email || "guest";
+    const ident = profileData?.user?.id || profileData?.id || profileData?.user?.email || profileData?.email || user?.id || user?.email || "guest";
     return `cm_dashboard_seen_${ident}`;
-  }, [profileData?.id, profileData?.email, user?.id, user?.email]);
+  }, [profileData?.user?.id, profileData?.id, profileData?.user?.email, profileData?.email, user?.id, user?.email]);
 
   const isActive = (path) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);

@@ -4,10 +4,11 @@ import { useAuth } from "../context/AuthContext";
 import loginImg from "../assets/bg-images/Login.webp";
 import { Link, useNavigate } from "react-router-dom";
 import AnimatedBg from "../components/Animate";
+import SEO from "../components/SEO";
 import { toast } from "react-toastify";
 
 export default function Register() {
-  const { register, verifyRegisterOtp, loginPendingRegisteredUser, checkProfile, storePendingRegisterCredentials, loading } = useAuth();
+  const { register, verifyRegisterOtp, requestRegisterEmailVerificationOtp, loginPendingRegisteredUser, checkProfile, storePendingRegisterCredentials, loading } = useAuth();
   const navigate = useNavigate();
 
   // Registration form state
@@ -16,7 +17,7 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [jobType, setJobType] = useState("");
+  const [jobType, setJobType] = useState("Both");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -160,17 +161,8 @@ export default function Register() {
     setOtp(["", "", "", "", "", ""]);
     setOtpError("");
     
-    // Resend OTP by calling register API again
-    const registrationData = {
-      name: name,
-      email: registeredEmail,
-      password: password,
-      password_confirmation: confirmPassword,
-      interested_in: jobType,
-    };
-    
     try {
-      const res = await register(registrationData);
+      const res = await requestRegisterEmailVerificationOtp(registeredEmail);
       if (res?.status) {
         toast.success("OTP resent successfully! 📧");
       } else {
@@ -204,10 +196,10 @@ export default function Register() {
       return;
     }
 
-    // if (!jobType) {
-    //   setError("Please select your interest (Govt Jobs or IT Jobs)");
-    //   return;
-    // }
+    if (!["Govt Jobs", "IT Jobs", "Both"].includes(jobType)) {
+      setError("Please select your interest (Govt Jobs, IT Jobs, or Both)");
+      return;
+    }
 
     if (!agreeTerms) {
       setError("Please agree to the Terms of Service and Privacy Policy");
@@ -222,7 +214,7 @@ export default function Register() {
       email: email,
       phone: phone,
       password: password,
-      password_confirmation: confirmPassword,
+      interest: jobType,
       interested_in: jobType,
     };
 
@@ -253,6 +245,13 @@ export default function Register() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center py-20">
+      <SEO
+        title="Register | Career Mitra"
+        description="Create your Career Mitra account to receive personalized government job and internship alerts."
+        keywords="career mitra register, sign up, government jobs alerts, internship alerts"
+        image="/NewLogo.png"
+        url="https://careermitra.in/register"
+      />
       {/* Animated Background */}
       <AnimatedBg />
       
@@ -261,7 +260,7 @@ export default function Register() {
         
         {/* LEFT SIDE IMAGE */}
         <div className="hidden md:flex items-center justify-center p-8">
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center md:shadow-[14px_0_24px_-16px_rgba(249,115,22,0.55)]">
             <img
               src={loginImg}
               alt="Register illustration"
@@ -372,59 +371,78 @@ export default function Register() {
             </button>
           </div>
 
-          {/* Radio Options - Card Style */}
-          {/* <div className="space-y-4 mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-green-500 rounded-full"></div>
-              <span className="text-gray-800 font-semibold text-xl">Are You Interested In?</span>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label className="relative group">
+          {/* Interest Selection */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2 shrink-0">
+                <div className="w-1 h-5 bg-gradient-to-b from-orange-500 to-green-500 rounded-full"></div>
+                <span className="text-gray-800 font-semibold whitespace-nowrap">Interested In</span>
+              </div>
+            <div className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
+              
+
+              <div className="grid grid-cols-3 gap-2 p-1 bg-gray-50 border border-gray-200 rounded-xl min-w-[360px] flex-1">
+              <label className="relative">
                 <input
                   type="radio"
                   name="job"
-                  value="govt"
+                  value="Govt Jobs"
                   onChange={(e) => setJobType(e.target.value)}
-                  className="absolute opacity-0 w-full h-full cursor-pointer z-10"
+                  className="sr-only"
+                  checked={jobType === "Govt Jobs"}
                 />
-                <div className="p-4 rounded-xl border-2 border-gray-200 group-hover:border-orange-400 group-hover:bg-orange-50 transition-all duration-200 cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="w-6 h-6 rounded-full border-2 border-orange-400 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-orange-500 opacity-0 transition-opacity" 
-                           style={{ opacity: jobType === 'govt' ? 1 : 0 }}></div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">🏛️</span>
-                      <span className="font-bold text-gray-800">Govt Jobs</span>
-                    </div>
-                  </div>
+                <div
+                  className={`px-3 py-2 rounded-lg border text-sm font-semibold text-center cursor-pointer transition-all duration-200 ${
+                    jobType === "Govt Jobs"
+                      ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-200"
+                      : "border-transparent text-gray-700 hover:bg-orange-50"
+                  }`}
+                >
+                  Govt Jobs
                 </div>
               </label>
 
-              <label className="relative group">
+              <label className="relative">
                 <input
                   type="radio"
                   name="job"
-                  value="it"
+                  value="IT Jobs"
                   onChange={(e) => setJobType(e.target.value)}
-                  className="absolute opacity-0 w-full h-full cursor-pointer z-10"
+                  className="sr-only"
+                  checked={jobType === "IT Jobs"}
                 />
-                <div className="p-4 rounded-xl border-2 border-gray-200 group-hover:border-green-400 group-hover:bg-green-50 transition-all duration-200 cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="w-6 h-6 rounded-full border-2 border-green-400 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-green-500 opacity-0 transition-opacity"
-                           style={{ opacity: jobType === 'it' ? 1 : 0 }}></div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">💻</span>
-                      <span className="font-bold text-gray-800">IT Jobs</span>
-                    </div>
-                  </div>
+                <div
+                  className={`px-3 py-2 rounded-lg border text-sm font-semibold text-center cursor-pointer transition-all duration-200 ${
+                    jobType === "IT Jobs"
+                      ? "border-green-500 bg-green-500 text-white shadow-md shadow-green-200"
+                      : "border-transparent text-gray-700 hover:bg-green-50"
+                  }`}
+                >
+                  IT Jobs
                 </div>
               </label>
+
+              <label className="relative">
+                <input
+                  type="radio"
+                  name="job"
+                  value="Both"
+                  onChange={(e) => setJobType(e.target.value)}
+                  className="sr-only"
+                  checked={jobType === "Both"}
+                />
+                <div
+                  className={`px-3 py-2 rounded-lg border text-sm font-semibold text-center cursor-pointer transition-all duration-200 ${
+                    jobType === "Both"
+                      ? "border-blue-500 bg-blue-500 text-white shadow-md shadow-blue-200"
+                      : "border-transparent text-gray-700 hover:bg-blue-50"
+                  }`}
+                >
+                  Both
+                </div>
+              </label>
+              </div>
             </div>
-          </div> */}
+          </div>
 
           {/* Terms and Conditions */}
           <div className="flex items-center gap-2 mb-6">
@@ -432,10 +450,10 @@ export default function Register() {
               type="checkbox" 
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="w-4 h-4 text-orange-500 rounded border-gray-300 focus:ring-orange-400" 
+              className="w-4 h-4 text-orange-500 rounded cursor-pointer border-gray-300 focus:ring-orange-400" 
               id="terms" 
             />
-            <label htmlFor="terms" className="text-sm text-gray-600">
+            <label htmlFor="terms" className="text-sm cursop text-gray-600">
               I agree to the{" "}
               <span className="text-orange-500 cursor-pointer hover:text-orange-600">
                 Terms of Service

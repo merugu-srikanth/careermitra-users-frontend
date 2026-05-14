@@ -4,8 +4,46 @@ import { toast } from "react-toastify";
 
 const AuthContext = createContext();
 
-const API = "https://careermitra.in/api/public/api";
+const DEFAULT_API_BASE_URL = "https://careermitra.tech";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+const API = `${API_BASE}/api`;
+const AUTH_API = `${API_BASE}/api/auth`;
 const PENDING_REGISTER_KEY = "pendingRegisterCredentials";
+const PENDING_REGISTER_TOKEN_KEY = "pendingRegisterToken";
+
+const OTP_PURPOSE = {
+  EMAIL_VERIFICATION: "email_verification",
+  LOGIN: "login",
+  FORGOT_PASSWORD: "forgot-password",
+};
+
+const normalizeAuthResponse = (data, fallbackMessage = "Request successful") => {
+  const token =
+    data?.token ||
+    data?.accessToken ||
+    data?.access_token ||
+    data?.data?.token ||
+    data?.data?.accessToken ||
+    data?.user?.token ||
+    null;
+
+  const user = data?.user || data?.data?.user || data?.data || null;
+  const explicitStatus = data?.status ?? data?.success;
+
+  return {
+    ...data,
+    status: typeof explicitStatus === "boolean" ? explicitStatus : true,
+    message: data?.message || fallbackMessage,
+    token,
+    user,
+  };
+};
+
+const normalizeAuthError = (err, fallbackMessage) => ({
+  ...(err.response?.data || {}),
+  status: false,
+  message: err.response?.data?.message || fallbackMessage,
+});
 
 const readPendingRegisterCredentials = () => {
   try {
@@ -28,6 +66,7 @@ export const AuthProvider = ({ children }) => {
 
   const clearPendingRegisterCredentials = () => {
     localStorage.removeItem(PENDING_REGISTER_KEY);
+    localStorage.removeItem(PENDING_REGISTER_TOKEN_KEY);
   };
 
   const getPendingRegisterCredentials = () => readPendingRegisterCredentials();
@@ -36,21 +75,25 @@ export const AuthProvider = ({ children }) => {
   const loginWithPassword = async (email, password) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/user/login`, { email, password });
+      const res = await axios.post(`${AUTH_API}/login`, { email, password });
+      const data = normalizeAuthResponse(res.data, "Login successful");
+      const loginData = data.token
+        ? data
+        : { ...data, status: false, message: data.message || "Login token missing" };
 
-      if (res.data.status) {
-        setToken(res.data.token);
-        localStorage.setItem("token", res.data.token);
-        setUser(res.data.user || { email });
+      if (loginData.status) {
+        setToken(loginData.token);
+        localStorage.setItem("token", loginData.token);
+        setUser(loginData.user || { email });
         toast.success("Login successful");
       } else {
-        toast.error(res.data.message);
+        toast.error(loginData.message || "Login failed");
       }
 
-      return res.data;
+      return loginData;
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
-      return err.response?.data || { status: false };
+      return normalizeAuthError(err, "Login failed");
     } finally {
       setLoading(false);
     }
@@ -73,40 +116,53 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
-  // 📩 SEND OTP (LOGIN)
-  const sendOtp = async (email) => {
+  const requestOtpByPurpose = async ({ email, purpose, authToken }) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/login`, { email });
-      toast.success(res.data.message || "OTP sent");
-      return res.data;
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+
+      const res = await axios.post(
+        `${AUTH_API}/request-otp`,
+        { email, purpose },
+        { headers }
+      );
+
+      return normalizeAuthResponse(res.data, "OTP sent successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send OTP");
-      return err.response?.data || { status: false };
+      return normalizeAuthError(err, "Failed to send OTP");
     } finally {
       setLoading(false);
     }
+  };
+
+  // 📩 SEND OTP (LOGIN)
+  const sendOtp = async (email) => {
+    return requestOtpByPurpose({ email, purpose: OTP_PURPOSE.LOGIN });
   };
 
   // ✅ VERIFY OTP (LOGIN)
   const verifyOtp = async (email, otp) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/verify-otp`, { email, otp });
+      const res = await axios.post(`${AUTH_API}/login/verify-otp`, { email, otp });
+      const data = normalizeAuthResponse(res.data, "Login successful");
 
-      if (res.data.token) {
-        setToken(res.data.token);
-        localStorage.setItem("token", res.data.token);
-        setUser({ email });
-        toast.success("Login successful");
-      } else {
-        toast.error(res.data.message);
+      if (data.status && data.token) {
+        setToken(data.token);
+        localStorage.setItem("token", data.token);
+        setUser(data.user || { email });
       }
 
-      return res.data;
+      return data;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid OTP");
-      return err.response?.data || { status: false };
+      return normalizeAuthError(err, "Invalid OTP");
     } finally {
       setLoading(false);
     }
@@ -116,23 +172,36 @@ export const AuthProvider = ({ children }) => {
   const register = async (data) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/register`, data, {
+      const payload = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        interest: data.interest || data.interested_in || "Govt Jobs",
+        interested_in: data.interested_in || data.interest || "Govt Jobs",
+      };
+
+      const res = await axios.post(`${AUTH_API}/register`, payload, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
       });
+      const responseData = normalizeAuthResponse(res.data, "User registered successfully");
 
-      if (res.data.status) {
-        toast.success(res.data.message || "OTP sent");
+      if (responseData.status) {
+        if (responseData.token) {
+          localStorage.setItem(PENDING_REGISTER_TOKEN_KEY, responseData.token);
+        }
+        toast.success(responseData.message || "OTP sent");
       } else {
-        toast.error(res.data.message);
+        toast.error(responseData.message);
       }
 
-      return res.data;
+      return responseData;
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed");
-      return err.response?.data || { status: false };
+      return normalizeAuthError(err, "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -142,21 +211,44 @@ export const AuthProvider = ({ children }) => {
   const verifyRegisterOtp = async (email, otp) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/verify-register-otp`, {
-        email,
-        otp,
-      });
+      const pendingToken = localStorage.getItem(PENDING_REGISTER_TOKEN_KEY);
+      const res = await axios.post(
+        `${AUTH_API}/email-verification`,
+        { otp },
+        {
+          headers: pendingToken
+            ? {
+                Authorization: `Bearer ${pendingToken}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              }
+            : {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+        }
+      );
+      const data = normalizeAuthResponse(res.data, "Email verified successfully");
 
-      if (res.data.status) {
+      if (data.status) {
+        const verifiedToken = data.token || pendingToken;
+        if (verifiedToken) {
+          setToken(verifiedToken);
+          localStorage.setItem("token", verifiedToken);
+        }
+        if (data.user) {
+          setUser(data.user);
+        }
+        localStorage.removeItem(PENDING_REGISTER_TOKEN_KEY);
         toast.success("Account created successfully");
       } else {
-        toast.error(res.data.message);
+        toast.error(data.message);
       }
 
-      return res.data;
+      return data;
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid OTP");
-      return err.response?.data || { status: false };
+      return normalizeAuthError(err, "Invalid OTP");
     } finally {
       setLoading(false);
     }
@@ -164,26 +256,34 @@ export const AuthProvider = ({ children }) => {
 
   // 🔑 FORGOT PASSWORD
   const forgotPassword = async (email) => {
-    try {
-      const res = await axios.post(`${API}/forgot-password`, { email });
-      toast.success(res.data.message);
-      return res.data;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send reset email");
-      return err.response?.data || { status: false };
-    }
+    return requestOtpByPurpose({ email, purpose: OTP_PURPOSE.FORGOT_PASSWORD });
   };
 
   // 🔄 RESET PASSWORD
   const resetPassword = async (data) => {
+    setLoading(true);
     try {
-      const res = await axios.post(`${API}/reset-password`, data);
-      toast.success(res.data.message);
-      return res.data;
+      const res = await axios.post(`${AUTH_API}/forgot-password/reset`, {
+        email: data.email,
+        otp: data.otp,
+        new_password: data.new_password,
+      });
+
+      return normalizeAuthResponse(res.data, "Password reset successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Reset failed");
-      return err.response?.data || { status: false };
+      return normalizeAuthError(err, "Password reset failed");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const requestRegisterEmailVerificationOtp = async (email) => {
+    const pendingToken = localStorage.getItem(PENDING_REGISTER_TOKEN_KEY);
+    return requestOtpByPurpose({
+      email,
+      purpose: OTP_PURPOSE.EMAIL_VERIFICATION,
+      authToken: pendingToken,
+    });
   };
 
   // � CHECK PROFILE COMPLETION
@@ -212,6 +312,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
+    localStorage.removeItem(PENDING_REGISTER_TOKEN_KEY);
     toast.success("Logged out");
   };
 
@@ -227,6 +328,7 @@ export const AuthProvider = ({ children }) => {
         verifyOtp,
         register,
         verifyRegisterOtp,
+        requestRegisterEmailVerificationOtp,
         forgotPassword,
         resetPassword,
         logout,

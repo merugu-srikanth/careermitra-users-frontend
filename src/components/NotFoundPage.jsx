@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import SEO from "./SEO";
 
 const NotFoundPage = () => {
   return (
@@ -10,6 +11,13 @@ const NotFoundPage = () => {
       //   background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
       // }}
     >
+      <SEO
+        title="Page Not Found | Career Mitra"
+        description="The page you are looking for was not found. Continue exploring opportunities on Career Mitra."
+        keywords="404, page not found, career mitra"
+        image="/NewLogo.png"
+        url="https://careermitra.in/not-found"
+      />
       {/* Background glow blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div

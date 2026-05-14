@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import DOMPurify from "dompurify";
+import SEO from "../components/SEO";
 
 import {
   FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaVenusMars,
@@ -1179,6 +1180,13 @@ const UserProfile = () => {
 
   return (
     <div className="mt-10 min-h-screen bg-gray-100 flex overflow-hidden">
+      <SEO
+        title="User Profile | Career Mitra"
+        description="View and manage your Career Mitra profile, notifications, subscriptions, and account details."
+        keywords="user profile, career mitra dashboard, account settings"
+        image="/NewLogo.png"
+        url="https://careermitra.in/UserProfile"
+      />
 
       {/* ════════════════════════════════
           LEFT SIDEBAR — dark navy

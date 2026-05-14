@@ -315,12 +315,24 @@ const buildSections = (profile, age) => {
   const sections = [];
   const used = new Set();
   const HIDE = new Set(["id", "role_id"]);
+  const SKIP_DYNAMIC_SECTION_KEYS = new Set(["user", "profile", "education", "sports"]);
   const pick = (obj, keys) => { const out = {}; keys.forEach(k => { if (!obj || HIDE.has(k) || isEV(obj[k])) return; out[k] = obj[k]; used.add(k); }); return out; };
   const push = (title, icon, data, extra = {}) => { if (!data) return; const c = {}; Object.entries(data).forEach(([k, v]) => { if (!HIDE.has(k) && !isEV(v)) c[k] = v; }); if (Object.keys(c).length) sections.push({ title, icon, data: c, ...extra }); };
 
-  const personal = pick(profile, ["name", "email", "phone", "gender", "date_of_birth", "current_status", "social_status", "additional_support"]);
+  const personal = pick(profile, ["name", "email", "phone", "gender", "date_of_birth", "current_status"]);
   if (!isEV(profile?.date_of_birth) && age) personal.age = `${age} years`;
   push("Personal Information", <Ic.User className="w-4 h-4" />, personal);
+
+  push(
+    "Additional Details",
+    <Ic.Info className="w-4 h-4" />,
+    pick(profile, [
+      "highest_education_institution_type",
+      "how_did_you_come_across_career_mitra",
+      "social_status",
+      "additional_support",
+    ])
+  );
 
   // used.add("subscription"); used.add("all_subscriptions");
   const sub = profile.subscription || null;
@@ -346,8 +358,26 @@ const buildSections = (profile, age) => {
   //   push("Career & Job Alerts",<Ic.Bag className="w-4 h-4"/>,pick(profile,["how_did_you_come_across_career_mitra","highest_education_institution_type"]));
   push("Account Information", <Ic.Info className="w-4 h-4" />, pick(profile, ["created_at", "updated_at"]));
 
-  Object.entries(profile).forEach(([k, v]) => { if (HIDE.has(k) || used.has(k) || isEV(v)) return; if (Array.isArray(v)) { used.add(k); sections.push({ title: prettyKey(k), icon: <Ic.Info className="w-4 h-4" />, isArray: true, data: v }); } });
-  Object.entries(profile).forEach(([k, v]) => { if (HIDE.has(k) || used.has(k) || isEV(v)) return; if (typeof v === "object" && !Array.isArray(v)) { const c = {}; Object.entries(v).forEach(([kk, vv]) => { if (!HIDE.has(kk) && !isEV(vv)) c[kk] = vv; }); if (Object.keys(c).length) { used.add(k); sections.push({ title: prettyKey(k), icon: <Ic.Info className="w-4 h-4" />, data: c }); } } });
+  Object.entries(profile).forEach(([k, v]) => {
+    if (SKIP_DYNAMIC_SECTION_KEYS.has(k) || HIDE.has(k) || used.has(k) || isEV(v)) return;
+    if (Array.isArray(v)) {
+      used.add(k);
+      sections.push({ title: prettyKey(k), icon: <Ic.Info className="w-4 h-4" />, isArray: true, data: v });
+    }
+  });
+  Object.entries(profile).forEach(([k, v]) => {
+    if (SKIP_DYNAMIC_SECTION_KEYS.has(k) || HIDE.has(k) || used.has(k) || isEV(v)) return;
+    if (typeof v === "object" && !Array.isArray(v)) {
+      const c = {};
+      Object.entries(v).forEach(([kk, vv]) => {
+        if (!HIDE.has(kk) && !isEV(vv)) c[kk] = vv;
+      });
+      if (Object.keys(c).length) {
+        used.add(k);
+        sections.push({ title: prettyKey(k), icon: <Ic.Info className="w-4 h-4" />, data: c });
+      }
+    }
+  });
   return sections;
 };
 
@@ -389,23 +419,51 @@ const SectionRenderer = ({ sec, idx }) => {
   const entries = Object.entries(sec.data || {}).filter(([k]) => !HIDE.has(k));
   if (!entries.length) return null;
   const fieldCount = entries.length;
+  const compactHorizontal = sec.title === "Personal Information" || fieldCount <= 4;
 
   return (
     <AccordionCard key={idx} title={sec.title} icon={sec.icon} badge={fieldCount > 4 ? `${fieldCount} fields` : null}>
-      <div className="px-5 py-2 pb-4">
-        {entries.map(([k, v]) => {
-          let icon = <Ic.Info className="w-3 h-3" />;
-          if (k === "email") icon = <Ic.Email className="w-3 h-3" />;
-          if (k === "phone") icon = <Ic.Phone className="w-3 h-3" />;
-          if (k === "date_of_birth") icon = <Ic.Cake className="w-3 h-3" />;
-          if (k === "gender") icon = <Ic.Gender className="w-3 h-3" />;
-          if (k.toLowerCase().includes("location") || k === "state" || k === "district") icon = <Ic.Pin className="w-3 h-3" />;
-          if (k.toLowerCase().includes("job")) icon = <Ic.Bag className="w-3 h-3" />;
-          if (k.toLowerCase().includes("cert")) icon = <Ic.Cert className="w-3 h-3" />;
-          const val = (k.includes("created_at") || k.includes("updated_at") || k === "date_of_birth") ? fmtDate(v) : v;
-          return <InfoRow key={k} label={prettyKey(k)} value={val} icon={icon} />;
-        })}
-      </div>
+      {compactHorizontal ? (
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {entries.map(([k, v]) => {
+            let icon = <Ic.Info className="w-3 h-3" />;
+            if (k === "email") icon = <Ic.Email className="w-3 h-3" />;
+            if (k === "phone") icon = <Ic.Phone className="w-3 h-3" />;
+            if (k === "date_of_birth") icon = <Ic.Cake className="w-3 h-3" />;
+            if (k === "gender") icon = <Ic.Gender className="w-3 h-3" />;
+            if (k.toLowerCase().includes("location") || k === "state" || k === "district") icon = <Ic.Pin className="w-3 h-3" />;
+            if (k.toLowerCase().includes("job")) icon = <Ic.Bag className="w-3 h-3" />;
+            if (k.toLowerCase().includes("cert")) icon = <Ic.Cert className="w-3 h-3" />;
+            const val = (k.includes("created_at") || k.includes("updated_at") || k === "date_of_birth") ? fmtDate(v) : v;
+            return (
+              <div key={k} className="bg-orange-50/50 border border-orange-100 rounded-xl px-3 py-2.5">
+                <div className="flex items-center gap-2 mb-1.5 text-[10px] text-orange-500 font-black uppercase tracking-wider">
+                  <span className="text-orange-400">{icon}</span>
+                  <span>{prettyKey(k)}</span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 break-words">
+                  {isEV(val) ? "—" : String(val)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="px-5 py-2 pb-4">
+          {entries.map(([k, v]) => {
+            let icon = <Ic.Info className="w-3 h-3" />;
+            if (k === "email") icon = <Ic.Email className="w-3 h-3" />;
+            if (k === "phone") icon = <Ic.Phone className="w-3 h-3" />;
+            if (k === "date_of_birth") icon = <Ic.Cake className="w-3 h-3" />;
+            if (k === "gender") icon = <Ic.Gender className="w-3 h-3" />;
+            if (k.toLowerCase().includes("location") || k === "state" || k === "district") icon = <Ic.Pin className="w-3 h-3" />;
+            if (k.toLowerCase().includes("job")) icon = <Ic.Bag className="w-3 h-3" />;
+            if (k.toLowerCase().includes("cert")) icon = <Ic.Cert className="w-3 h-3" />;
+            const val = (k.includes("created_at") || k.includes("updated_at") || k === "date_of_birth") ? fmtDate(v) : v;
+            return <InfoRow key={k} label={prettyKey(k)} value={val} icon={icon} />;
+          })}
+        </div>
+      )}
     </AccordionCard>
   );
 };
@@ -468,7 +526,7 @@ const JobsPanel = ({ token }) => {
   const today = useMemo(() => new Date(), []);
   const normRange = useCallback((f, t) => { if (!f || !t) return { from: f || "", to: t || "" }; return f > t ? { from: t, to: f } : { from: f, to: t }; }, []);
 
-  useEffect(() => { if (!token) return; (async () => { try { setLoading(true); setError(""); setProfileRequired(false); const { from, to } = normRange(appliedFrom, appliedTo); const res = await axios.get(`${API_BASE}/job-posts-assigned/my-assigned`, { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }, params: { ...(from ? { from_date: from } : {}), ...(to ? { to_date: to } : {}) } }); if (res.data?.status === true) setJobs(res.data?.assigned_job_posts?.data || []); else { const msg = res.data?.message || "Failed"; if (msg === "Education profile not found") setProfileRequired(true); else setError(msg); setJobs([]); } } catch (e) { setError(e?.response?.data?.message || e?.message || "Unable to fetch jobs"); setJobs([]); } finally { setLoading(false); } })(); }, [token, appliedFrom, appliedTo, normRange]);
+  useEffect(() => { if (!token) return; const JOBS_ANN_API_READY = false; if (!JOBS_ANN_API_READY) return; (async () => { try { setLoading(true); setError(""); setProfileRequired(false); const { from, to } = normRange(appliedFrom, appliedTo); const res = await axios.get(`${API_BASE}/job-posts-assigned/my-assigned`, { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }, params: { ...(from ? { from_date: from } : {}), ...(to ? { to_date: to } : {}) } }); if (res.data?.status === true) setJobs(res.data?.assigned_job_posts?.data || []); else { const msg = res.data?.message || "Failed"; if (msg === "Education profile not found") setProfileRequired(true); else setError(msg); setJobs([]); } } catch (e) { setError(e?.response?.data?.message || e?.message || "Unable to fetch jobs"); setJobs([]); } finally { setLoading(false); } })(); }, [token, appliedFrom, appliedTo, normRange]);
 
   const filtered = useMemo(() => jobs.slice().sort((a, b) => new Date(b.application_deadline) - new Date(a.application_deadline)).filter(job => { const d = parseDate(job.application_deadline); const isExp = d ? d < today : false; const ok = status === "all" || (status === "current" && !isExp) || (status === "expired" && isExp); const q = search.trim().toLowerCase(); const sm = !q || (job?.title || "").toLowerCase().includes(q) || (job?.jobsource?.site_name || "").toLowerCase().includes(q) || (job?.jobsource?.category?.name || "").toLowerCase().includes(q); return ok && sm; }), [jobs, search, status, today]);
 
@@ -605,6 +663,7 @@ const AnnouncementsPanel = ({ token }) => {
 
   useEffect(() => {
     if (!token) return;
+    const JOBS_ANN_API_READY = false; if (!JOBS_ANN_API_READY) return;
     (async () => { try { setLoading(true); setError(""); const res = await axios.get(`${API_BASE}/marketing-events/my-events`, { headers: { Authorization: `Bearer ${token}` } }); if (res.data?.status) setEvents(res.data.events || []); else setError("No events found"); } catch { setError("Failed to load events"); } finally { setLoading(false); } })();
   }, [token]);
 
@@ -825,11 +884,26 @@ const UserProfilePage = () => {
     (async () => {
       try {
         setLoading(true); setError("");
-        const res = await axios.get(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.data?.status) throw new Error(res.data?.message || "Failed");
+        const res = await axios.get(`https://careermitra.tech/api/user/profile`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.data?.status === false) throw new Error(res.data?.message || "Failed");
         const d = res.data?.data || {};
-        setProfile({ ...d, notify: normBool(d.notify), alert_job: normBool(d.alert_job), alert_internship: normBool(d.alert_internship), alert_both: normBool(d.alert_both), qualified_teacher_exam: normBool(d.qualified_teacher_exam), education: flattenEducation(d.education), subscription: d.subscription || null, all_subscriptions: Array.isArray(d.all_subscriptions) ? d.all_subscriptions : [], media: d.media || d.documents || d.files || [] });
-        setAge(calcAge(d.date_of_birth));
+        const userData = d?.user && typeof d.user === "object" ? d.user : d;
+        setProfile({
+          ...d,
+          ...userData,
+          notify: normBool(userData?.notify),
+          alert_job: normBool(userData?.alert_job),
+          alert_internship: normBool(userData?.alert_internship),
+          alert_both: normBool(userData?.alert_both),
+          qualified_teacher_exam: normBool(userData?.qualified_teacher_exam),
+          education: flattenEducation(d?.education || userData?.education),
+          subscription: d?.subscription || userData?.subscription || null,
+          all_subscriptions: Array.isArray(d?.all_subscriptions)
+            ? d.all_subscriptions
+            : (Array.isArray(userData?.all_subscriptions) ? userData.all_subscriptions : []),
+          media: d?.media || d?.documents || d?.files || userData?.media || userData?.documents || userData?.files || [],
+        });
+        setAge(calcAge(userData?.date_of_birth));
       } catch (e) {
         const msg = e?.response?.data?.message || e?.message || "Error";
         setError(msg); toast.error(msg);
@@ -840,6 +914,9 @@ const UserProfilePage = () => {
 
   useEffect(() => {
     if (!token) return;
+    // TODO: remove this flag once jobs & announcements APIs are ready on backend
+    const JOBS_ANN_API_READY = false;
+    if (!JOBS_ANN_API_READY) return;
     (async () => {
       try {
         const seen = getSeenState();
@@ -939,7 +1016,7 @@ const UserProfilePage = () => {
   ];
 
   return (
-    <div className="min-h-screen max-w-6xl mx-auto bg-gradient-to-br from-orange-50/60 via-amber-50/20 to-orange-50/60">
+    <div className="min-h-screen max-w-7xl mx-auto bg-white">
       <SEO
         title="Student Dashboard  | Career Mitra"
         description="Access your personalized dashboard to explore govt jobs, internships, and career resources tailored for students. Stay updated with the latest opportunities and manage your profile effectively."
@@ -958,8 +1035,8 @@ const UserProfilePage = () => {
             <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0 bg-white/10 border border-white/15 rounded-2xl p-3.5 md:p-0 md:bg-transparent md:border-0">
               <AvatarSVG size={56} />
               <div className="flex-1 min-w-0">
-                <h1 className="text-base md:text-lg font-black text-white leading-tight wrap-break-word md:truncate">{profile.name || "User"}</h1>
-                <p className="text-orange-100 text-xs mb-2 break-all md:truncate">{profile.email}</p>
+                <h1 className="text-base md:text-lg font-black text-white leading-tight wrap-break-word md:truncate">{profile?.user?.name || profile?.name || "User"}</h1>
+                <p className="text-orange-100 text-xs mb-2 break-all md:truncate">{profile?.user?.email || profile?.email || ""}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {headerTags.map(t => <span key={t} className="text-[11px] md:text-xs bg-white/20 text-white px-2.5 py-0.5 rounded-full font-semibold backdrop-blur-sm">{t}</span>)}
                   {profile.current_location && <span className="text-[11px] md:text-xs bg-white/15 text-white/90 px-2.5 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm"><Ic.Pin className="w-2.5 h-2.5" />{profile.current_location}</span>}
@@ -1012,20 +1089,24 @@ const UserProfilePage = () => {
       </div>
 
       {/* ── BODY ── */}
-      <div className="max-w-6xl mx-auto px-2 py-3 flex gap-2">
+      <div className="max-w-7xl mx-auto px-3 md:px-5 py-4 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-4 md:gap-5">
 
         {/* ── LEFT SIDEBAR ── */}
 
-        <aside className="hidden md:flex flex-col gap-3 w-56 shrink-0 sticky top-20 self-start">
+        <aside className="hidden lg:flex flex-col gap-3 w-full shrink-0 sticky top-20 self-start bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 rounded-3xl p-3.5 border border-orange-200/40 shadow-xl shadow-orange-300/35">
+
+          <div className="px-1 pb-0.5">
+            <p className="text-[10px] font-black text-white/90 uppercase tracking-[0.2em]">Dashboard</p>
+          </div>
 
           {/* Profile mini card */}
-          <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-4 shadow-md">
+          <div className="bg-white/20 rounded-2xl p-4 border border-white/25 backdrop-blur-md">
             <div className="flex items-center justify-between mb-3">
               <AvatarSVG size={44} />
-              {profileCompletion === 100 && <button onClick={() => navigate("/user-profile-filling")} className="px-2.5 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold backdrop-blur-sm transition-colors flex items-center gap-1 border border-white/20"><Ic.Edit className="w-3 h-3" />Edit</button>}
+              {profileCompletion === 100 && <button onClick={() => navigate("/user-profile-filling")} className="px-2.5 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold backdrop-blur-sm transition-colors flex items-center gap-1 border border-white/25"><Ic.Edit className="w-3 h-3" />Edit</button>}
             </div>
             <p className="text-white font-black text-sm truncate">{profile.name || "User"}</p>
-            <p className="text-orange-100 text-xs truncate mb-3">{profile.email}</p>
+            <p className="text-white/80 text-xs truncate mb-3">{profile.email}</p>
             <div className="flex justify-between text-xs text-white/70 mb-1">
               <span className="font-semibold">Completion</span>
               <span className="font-black text-white">{profileCompletion}%</span>
@@ -1036,52 +1117,73 @@ const UserProfilePage = () => {
           </div>
 
           {/* Nav */}
-          <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 bg-orange-50 border-b border-orange-100">
-              <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Navigation</p>
+          <div className="bg-white/10 rounded-2xl border border-white/20 overflow-hidden backdrop-blur-md">
+            <div className="px-4 py-3 bg-white/10 border-b border-white/15">
+              <p className="text-[10px] font-black text-white uppercase tracking-widest">Navigation</p>
+              <p className="text-[10px] text-white/75 mt-0.5">Choose a section to continue</p>
             </div>
-            {NAV.map(t => (
-              <button key={t.id} onClick={() => setActiveTab(t.id)} className={cx("w-full text-left px-4 py-3 flex items-center gap-3 transition-all border-l-2", activeTab === t.id ? "bg-orange-50 border-orange-500" : "border-transparent hover:bg-orange-50/40 hover:border-orange-200")}>
-                <span className={activeTab === t.id ? "text-orange-500" : "text-slate-400"}>{t.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <p className={cx("text-xs font-bold leading-none", activeTab === t.id ? "text-orange-700" : "text-slate-700")}>{t.label}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{t.desc}</p>
-                </div>
-                {typeof t.count === "number" && (
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className={cx("text-[10px] font-black px-2 py-0.5 rounded-full", t.id === "jobs" ? "bg-orange-500 text-white" : (activeTab === t.id ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-600"))}>
-                      {t.id === "jobs" ? `Active ${t.count}` : t.count}
-                    </span>
-                    {(t.id === "jobs" || t.newCount > 0) && (
-                      <span className={cx("text-[9px] font-bold px-2 py-0.5 rounded-full text-white", t.id === "jobs" ? "bg-green-500" : "bg-red-500")}>
-                        {t.id === "jobs" ? `New ${t.newCount}` : `${t.newCount} new`}
-                      </span>
-                    )}
+            <div className="p-2.5 space-y-2">
+              {NAV.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={cx(
+                    "w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all border relative",
+                    activeTab === t.id
+                      ? "bg-white border-white shadow-md"
+                      : "bg-white/10 border-transparent text-white hover:bg-white/20 hover:border-white/25 hover:translate-x-0.5"
+                  )}
+                >
+                  {activeTab === t.id && <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-orange-500" />}
+                  <span className={cx(
+                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                    activeTab === t.id ? "bg-orange-100 text-orange-600" : "bg-white/15 text-white group-hover:bg-white/20"
+                  )}>
+                    {t.icon}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={cx("text-[13px] font-bold leading-none", activeTab === t.id ? "text-orange-700" : "text-white")}>{t.label}</p>
+                    <p className={cx("text-[11px] mt-1", activeTab === t.id ? "text-slate-500" : "text-white/75")}>{t.desc}</p>
                   </div>
-                )}
-              </button>
-            ))}
+                  {typeof t.count === "number" && (
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className={cx(
+                        "text-[10px] font-black px-2 py-0.5 rounded-full",
+                        activeTab === t.id ? "bg-orange-500 text-white" : "bg-white/20 text-white"
+                      )}>
+                        {t.id === "jobs" ? `Active ${t.count}` : t.count}
+                      </span>
+                      {(t.id === "jobs" || t.newCount > 0) && (
+                        <span className={cx("text-[9px] font-bold px-2 py-0.5 rounded-full text-white", t.id === "jobs" ? "bg-green-500" : "bg-red-500")}>
+                          {t.id === "jobs" ? `New ${t.newCount}` : `${t.newCount} new`}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Subscription widget */}
           {profile.subscription?.plan_name && (
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-4">
-              <p className="text-[10px] font-black text-orange-400 uppercase tracking-wider mb-2 flex items-center gap-1"><Ic.Layers className="w-3 h-3" />Subscription</p>
-              <p className="font-black text-slate-800 text-sm">{profile.subscription.plan_name}</p>
+            <div className="bg-white/10 rounded-2xl border border-white/20 p-4 backdrop-blur-md">
+              <p className="text-[10px] font-black text-white uppercase tracking-wider mb-2 flex items-center gap-1"><Ic.Layers className="w-3 h-3" />Subscription</p>
+              <p className="font-black text-white text-sm">{profile.subscription.plan_name}</p>
               <span className={cx("inline-block text-xs px-2 py-0.5 rounded-full font-bold mt-1", subBadge)}>{subStatus}</span>
-              {profile.subscription.end_date && <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1"><Ic.Cal className="w-3 h-3" />Until {fmtDate(profile.subscription.end_date)}</p>}
+              {profile.subscription.end_date && <p className="text-xs text-white/80 mt-1.5 flex items-center gap-1"><Ic.Cal className="w-3 h-3" />Until {fmtDate(profile.subscription.end_date)}</p>}
             </div>
           )}
 
           {/* Logout */}
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm hover:bg-red-50 hover:border-red-200 transition-all group">
-            <div className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center"><Ic.Logout className="w-3.5 h-3.5 text-red-400 group-hover:text-red-600 transition-colors" /></div>
-            <span className="text-xs font-bold text-slate-500 group-hover:text-red-600 transition-colors">Logout</span>
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 bg-white/90 rounded-2xl border border-white/20 hover:bg-red-500/20 hover:border-red-200/60 transition-all group">
+            <div className="w-7 h-7 bg-white/15 rounded-lg text-orange-500 flex items-center justify-center"><Ic.Logout className="w-3.5 h-3.5 text-orange-500 group-hover:text-red-100 transition-colors" /></div>
+            <span className="text-xs font-bold text-orange-500 group-hover:text-red-100 transition-colors">Logout</span>
           </button>
         </aside>
 
         {/* ── MAIN ── */}
-        <main className="flex-1 min-w-0">
+        <main className="min-w-0 bg-white/70 rounded-2xl border border-orange-100 shadow-sm p-3 md:p-4">
 
           {/* Mobile tab bar */}
           <div className="md:hidden mb-4">

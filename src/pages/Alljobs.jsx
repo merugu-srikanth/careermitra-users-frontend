@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AllJobCard from "../components/AllJobCard";
+import SEO from "../components/SEO";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const SearchIcon = () => (
@@ -415,6 +416,13 @@ export default function AllJobs() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50/40 via-white to-green-50/20">
+      <SEO
+        title="All Government Jobs | Career Mitra"
+        description="Explore verified government job notifications, vacancies, and category-wise listings across India."
+        keywords="government jobs, latest govt jobs, vacancies, job notifications, career mitra jobs"
+        image="/NewLogo.png"
+        url="https://careermitra.in/jobs"
+      />
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
       <div className="relative bg-linear-to-b from-orange-100 via-orange-100 to-orange-700 overflow-hidden">

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import loginImg from "../assets/bg-images/Login.webp";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AnimatedBg from "../components/Animate";
+import SEO from "../components/SEO";
 import { toast } from "react-toastify";
 
 export default function Login() {
@@ -86,8 +87,8 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await verifyOtp(email, otp);
-      if (!res?.token) {
-        setError("Invalid OTP. Please try again");
+      if (!res?.status || !res?.token) {
+        setError(res?.message || "Invalid OTP. Please try again");
       } else {
         toast.success("OTP Login Successful! 🎉");
         const profileComplete = await checkProfile(res.token);
@@ -115,8 +116,8 @@ export default function Login() {
     try {
       const res = await forgotPassword(email);
       if (res?.status) {
-        toast.success("Password reset link sent to your email! 📧");
-        setStep("login");
+        toast.success("OTP sent to your email for password reset. 📧");
+        navigate("/reset-password", { state: { email } });
       } else {
         setError(res?.message || "Failed to send reset email");
       }
@@ -206,11 +207,18 @@ export default function Login() {
   const subtitleMap = {
     login: "Enter your credentials to access your account",
     otp: "Enter the OTP sent to your email",
-    forgot: "Enter your email to receive a password reset link",
+    forgot: "Enter your email to receive a password reset OTP",
   };
 
   return (
     <div className="min-h-screen relative flex items-center justify-center py-20">
+      <SEO
+        title="Login | Career Mitra"
+        description="Login to your Career Mitra account to access your profile, job alerts, and dashboard."
+        keywords="career mitra login, user login, govt jobs login, dashboard login"
+        image="/NewLogo.png"
+        url="https://careermitra.in/login"
+      />
       <AnimatedBg />
 
       <div className="max-w-7xl bg-white rounded-2xl shadow-xl grid md:grid-cols-2 overflow-hidden relative z-10">
@@ -381,7 +389,7 @@ export default function Login() {
                   loading ? "opacity-70 cursor-not-allowed" : ""
                 }`}
               >
-                {loading ? "Sending..." : "Send Reset Link"}
+                {loading ? "Sending..." : "Send Reset OTP"}
               </button>
 
               <button

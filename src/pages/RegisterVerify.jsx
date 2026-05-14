@@ -4,10 +4,11 @@ import { useAuth } from "../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import loginImg from "../assets/bg-images/Login.webp";
 import AnimatedBg from "../components/Animate";
+import SEO from "../components/SEO";
 import { toast } from "react-toastify";
 
 export default function VerifyOtp() {
-  const { verifyRegisterOtp, loginPendingRegisteredUser, checkProfile, loading } = useAuth();
+  const { verifyRegisterOtp, requestRegisterEmailVerificationOtp, loginPendingRegisteredUser, checkProfile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -91,8 +92,17 @@ export default function VerifyOtp() {
   };
 
   const handleResendOtp = async () => {
-    // Implement resend OTP logic here
-    // You'll need to call your register API again to resend OTP
+    if (!email) {
+      setError("Email not found. Please register again.");
+      return;
+    }
+
+    const res = await requestRegisterEmailVerificationOtp(email);
+    if (!res?.status) {
+      setError(res?.message || "Failed to resend OTP.");
+      return;
+    }
+
     setTimeLeft(300);
     setCanResend(false);
     setOtp("");
@@ -108,6 +118,13 @@ export default function VerifyOtp() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center py-20">
+      <SEO
+        title="Verify OTP | Career Mitra"
+        description="Verify your OTP to complete your Career Mitra account activation securely."
+        keywords="otp verification, email verification, career mitra otp"
+        image="/NewLogo.png"
+        url="https://careermitra.in/verify-otp"
+      />
       {/* Animated Background */}
       <AnimatedBg />
       

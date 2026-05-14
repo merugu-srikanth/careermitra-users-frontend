@@ -9,7 +9,7 @@ import SEO from "../components/SEO";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
-const API_PROFILE = "https://careermitra.in/api/public/api/profile";
+const API_USER_PROFILE = "https://careermitra.tech/api/user/profile";
 
 const CURRENT_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Completed"];
 
@@ -120,6 +120,18 @@ const PREF_CATEGORIES = [
 
 const MAX_PREF = 3;
 
+// Rainbow color palette (used for confetti particles)
+const RAINBOW_CONFETTI_COLORS = [
+  "#ef4444", // red
+  "#f97316", // orange
+  "#facc15", // yellow
+  "#22c55e", // green
+  "#06b6d4", // cyan
+  "#3b82f6", // blue
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+];
+
 // ─── HELPER FUNCTIONS ────────────────────────────────────────────────────────
 
 function toNull(v) {
@@ -141,6 +153,13 @@ function normalizePC(v) {
 function calcAge(dob) {
   if (!dob) return 0;
   return Math.abs(new Date(Date.now() - new Date(dob).getTime()).getUTCFullYear() - 1970);
+}
+
+function toDateInputValue(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
 }
 
 function mapQualToBackend(q) {
@@ -285,6 +304,18 @@ const INIT_EDU = {
   other_education_current_year: "",
 };
 
+const INIT_SPORTS = {
+  isSportsPerson: false,
+  sportName: "",
+  otherSportName: "",
+  participationLevel: "",
+  otherParticipationLevel: "",
+  achievementType: "",
+  otherAchievementType: "",
+  participationYear: "",
+  sportsQuotaEligible: false,
+};
+
 // ─── REUSABLE SMALL COMPONENTS ────────────────────────────────────────────────
 
 function Label({ text, required }) {
@@ -419,6 +450,7 @@ export default function Userprofilefillingpage({ onClose }) {
     email: location?.state?.email || "",
   });
   const [edu, setEdu] = useState(INIT_EDU);
+  const [sports, setSports] = useState(INIT_SPORTS);
 
   // ── Extra state
   const [hasTechCert, setHasTechCert] = useState("no");
@@ -473,12 +505,23 @@ export default function Userprofilefillingpage({ onClose }) {
     if (!token) return;
     setIsLoading(true);
     axios
-      .get(API_PROFILE, { headers: { Authorization: `Bearer ${token}` } })
+      .get(API_USER_PROFILE, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+        params: { _t: Date.now() },
+      })
       .then((res) => {
-        if (!res.data?.status) return;
-        const api = res.data.data || res.data || {};
-        setProfileData(api);
-        const ed = api.education || {};
+        if (res.data?.status === false || res.data?.success === false) return;
+
+        const payload = res.data?.data || res.data || {};
+        const api = payload.user || payload.profile || payload || {};
+        const ed = payload.education || api.education || {};
+        const sp = payload.sports || api.sports || {};
+
+        setProfileData({ ...payload, user: api, education: ed, sports: sp });
 
         // Find stateCode from state name
         const foundState = allStates.find((s) => s.name === api.state);
@@ -487,18 +530,34 @@ export default function Userprofilefillingpage({ onClose }) {
         setPersonal({
           name: api.name || "",
           email: api.email || "",
-          phone: api.phone || "",
-          gender: api.gender || "",
-          date_of_birth: api.date_of_birth || "",
+          phone:
+            api.phone ||
+            api.mobile_number ||
+            api.mobile ||
+            api.contact_number ||
+            api.phone_number ||
+            user?.phone ||
+            user?.mobile_number ||
+            user?.mobile ||
+            "",
+          gender: api.gender
+            ? `${String(api.gender).charAt(0).toUpperCase()}${String(api.gender).slice(1).toLowerCase()}`
+            : "",
+          date_of_birth: toDateInputValue(api.date_of_birth),
           state: api.state || "",
           stateCode: stateCode,
           district: api.district || "",
           current_location: api.current_location || "",
           current_status: api.current_status || "",
           physically_challenged: normalizePC(api.physically_challenged),
-          highest_education_institution_type: api.highest_education_institution_type || "",
+          highest_education_institution_type:
+            String(api.highest_education_institution_type || "").toLowerCase() === "private"
+              ? "Private"
+              : String(api.highest_education_institution_type || "").toLowerCase() === "government"
+              ? "government"
+              : "",
           how_did_you_come_across_career_mitra: api.how_did_you_come_across_career_mitra || "",
-          how_did_you_come_across_career_mitra_other: "",
+          how_did_you_come_across_career_mitra_other: api.how_did_you_come_across_career_mitra_other || "",
           social_status: api.social_status || "",
           additional_support: api.additional_support || "",
           notification_preference: api.notification_preference || "email",
@@ -517,6 +576,9 @@ export default function Userprofilefillingpage({ onClose }) {
         if (api.any_other_certification_from_board_of_education) {
           setHasOtherCert("yes");
           setOtherCertDetail(api.any_other_certification_from_board_of_education);
+        } else {
+          setHasOtherCert("no");
+          setOtherCertDetail("");
         }
 
         const te = String(
@@ -532,68 +594,98 @@ export default function Userprofilefillingpage({ onClose }) {
             id: ed.id || null,
             user_id: ed.user_id || null,
             highest_qualification: mapBackendToQ(ed.qualification_level || ""),
-            below10th_details: ed.below10th?.details || "",
-            below10th_schoolname: ed.below10th?.school_name || "",
-            tenth_board: ed.tenth?.board || "",
-            tenth_schoolname: ed.tenth?.school_name || "",
-            intermediate_course: ed.intermediate?.course || "",
-            intermediate_course_other: ed.intermediate?.course_other || "",
-            intermediate_board: ed.intermediate?.board || "",
-            intermediate_vocational_subject: ed.intermediate?.vocational_subject || "",
-            intermediate_college_name: ed.intermediate?.college_name || "",
-            intermediate_current_year: ed.intermediate?.current_year || "",
-            iti_trade: ed.iti?.trade || "",
-            iti_trade_other: ed.iti?.trade_other || "",
-            iti_college_name: ed.iti?.college_name || "",
-            iti_current_year: ed.iti?.current_year || "",
-            polytechnic_branch: ed.polytechnic?.branch || "",
-            polytechnic_college_name: ed.polytechnic?.college_name || "",
-            polytechnic_current_year: ed.polytechnic?.current_year || "",
-            graduation_type: ed.graduation?.type || "",
-            graduation_course: ed.graduation?.course || "",
-            graduation_course_other: ed.graduation?.course_other || "",
-            graduation_subject1: ed.graduation?.subjects?.[0] || "",
-            graduation_subject2: ed.graduation?.subjects?.[1] || "",
-            graduation_subject3: ed.graduation?.subjects?.[2] || "",
-            graduation_specialization: ed.graduation?.specialization || "",
-            graduation_college_name: ed.graduation?.college_name || "",
-            graduation_current_year: ed.graduation?.current_year || "",
-            second_graduation_type: ed.second_graduation?.type || "",
-            second_graduation_course: ed.second_graduation?.course || "",
-            second_graduation_course_other: ed.second_graduation?.course_other || "",
-            second_graduation_subject1: ed.second_graduation?.subjects?.[0] || "",
-            second_graduation_subject2: ed.second_graduation?.subjects?.[1] || "",
-            second_graduation_subject3: ed.second_graduation?.subjects?.[2] || "",
-            second_graduation_specialization: ed.second_graduation?.specialization || "",
-            second_graduation_college_name: ed.second_graduation?.college_name || "",
-            second_graduation_current_year: ed.second_graduation?.current_year || "",
-            post_graduation_course: ed.post_graduation?.course || "",
-            post_graduation_course_other: ed.post_graduation?.course_other || "",
-            post_graduation_specialization: ed.post_graduation?.specialization || "",
-            pg_subject1: ed.post_graduation?.subjects?.[0] || "",
-            pg_subject2: ed.post_graduation?.subjects?.[1] || "",
-            pg_subject3: ed.post_graduation?.subjects?.[2] || "",
-            pg_college_name: ed.post_graduation?.college_name || "",
-            pg_current_year: ed.post_graduation?.current_year || "",
-            second_post_graduation_course: ed.second_post_graduation?.course || "",
-            second_post_graduation_course_other: ed.second_post_graduation?.course_other || "",
-            second_post_graduation_specialization: ed.second_post_graduation?.specialization || "",
-            second_pg_subject1: ed.second_post_graduation?.subjects?.[0] || "",
-            second_pg_subject2: ed.second_post_graduation?.subjects?.[1] || "",
-            second_pg_subject3: ed.second_post_graduation?.subjects?.[2] || "",
-            second_pg_college_name: ed.second_post_graduation?.college_name || "",
-            second_pg_current_year: ed.second_post_graduation?.current_year || "",
-            phd_research_field: ed.phd?.research_field || "",
-            phd_university: ed.phd?.university || "",
-            phd_university_name: ed.phd?.university_name || "",
-            phd_current_year: ed.phd?.current_year || "",
-            other_course_code: ed.other?.course_code || "",
-            other_course_specialization: ed.other?.specialization || "",
-            other_course_full_name: ed.other?.course_full_name || "",
-            other_education_full_name: ed.other?.education_full_name || "",
-            other_education_current_year: ed.other?.current_year || "",
+            below10th_details: ed.below10th?.details || ed.below10th_details || "",
+            below10th_schoolname: ed.below10th?.school_name || ed.below10th_schoolname || "",
+            tenth_board: ed.tenth?.board || ed["10th_board"] || ed.tenth_board || "",
+            tenth_schoolname: ed.tenth?.school_name || ed["10th_schoolname"] || ed.tenth_schoolname || "",
+            intermediate_course: ed.intermediate?.course || ed.intermediate_course || "",
+            intermediate_course_other: ed.intermediate?.course_other || ed.intermediate_course_other || "",
+            intermediate_board: ed.intermediate?.board || ed.intermediate_board || "",
+            intermediate_vocational_subject:
+              ed.intermediate?.vocational_subject || ed.intermediate_vocational_subject || "",
+            intermediate_college_name: ed.intermediate?.college_name || ed.intermediate_college_name || "",
+            intermediate_current_year: ed.intermediate?.current_year || ed.intermediate_current_year || "",
+            iti_trade: ed.iti?.trade || ed.iti_trade || "",
+            iti_trade_other: ed.iti?.trade_other || ed.iti_trade_other || "",
+            iti_college_name: ed.iti?.college_name || ed.iti_college_name || "",
+            iti_current_year: ed.iti?.current_year || ed.iti_current_year || "",
+            polytechnic_branch: ed.polytechnic?.branch || ed.polytechnic_branch || "",
+            polytechnic_college_name: ed.polytechnic?.college_name || ed.polytechnic_college_name || "",
+            polytechnic_current_year: ed.polytechnic?.current_year || ed.polytechnic_current_year || "",
+            graduation_type: ed.graduation?.type || ed.graduation_type || "",
+            graduation_course: ed.graduation?.course || ed.graduation_course || "",
+            graduation_course_other: ed.graduation?.course_other || ed.graduation_course_other || "",
+            graduation_subject1: ed.graduation?.subjects?.[0] || ed.graduation_subject1 || "",
+            graduation_subject2: ed.graduation?.subjects?.[1] || ed.graduation_subject2 || "",
+            graduation_subject3: ed.graduation?.subjects?.[2] || ed.graduation_subject3 || "",
+            graduation_specialization: ed.graduation?.specialization || ed.graduation_specialization || "",
+            graduation_college_name: ed.graduation?.college_name || ed.graduation_college_name || "",
+            graduation_current_year: ed.graduation?.current_year || ed.graduation_current_year || "",
+            second_graduation_type: ed.second_graduation?.type || ed.second_graduation_type || "",
+            second_graduation_course: ed.second_graduation?.course || ed.second_graduation_course || "",
+            second_graduation_course_other:
+              ed.second_graduation?.course_other || ed.second_graduation_course_other || "",
+            second_graduation_subject1:
+              ed.second_graduation?.subjects?.[0] || ed.second_graduation_subject1 || "",
+            second_graduation_subject2:
+              ed.second_graduation?.subjects?.[1] || ed.second_graduation_subject2 || "",
+            second_graduation_subject3:
+              ed.second_graduation?.subjects?.[2] || ed.second_graduation_subject3 || "",
+            second_graduation_specialization:
+              ed.second_graduation?.specialization || ed.second_graduation_specialization || "",
+            second_graduation_college_name:
+              ed.second_graduation?.college_name || ed.second_graduation_college_name || "",
+            second_graduation_current_year:
+              ed.second_graduation?.current_year || ed.second_graduation_current_year || "",
+            post_graduation_course: ed.post_graduation?.course || ed.post_graduation_course || "",
+            post_graduation_course_other:
+              ed.post_graduation?.course_other || ed.post_graduation_course_other || "",
+            post_graduation_specialization:
+              ed.post_graduation?.specialization || ed.post_graduation_specialization || "",
+            pg_subject1: ed.post_graduation?.subjects?.[0] || ed.pg_subject1 || "",
+            pg_subject2: ed.post_graduation?.subjects?.[1] || ed.pg_subject2 || "",
+            pg_subject3: ed.post_graduation?.subjects?.[2] || ed.pg_subject3 || "",
+            pg_college_name: ed.post_graduation?.college_name || ed.pg_college_name || "",
+            pg_current_year: ed.post_graduation?.current_year || ed.pg_current_year || "",
+            second_post_graduation_course:
+              ed.second_post_graduation?.course || ed.second_post_graduation_course || "",
+            second_post_graduation_course_other:
+              ed.second_post_graduation?.course_other || ed.second_post_graduation_course_other || "",
+            second_post_graduation_specialization:
+              ed.second_post_graduation?.specialization || ed.second_post_graduation_specialization || "",
+            second_pg_subject1:
+              ed.second_post_graduation?.subjects?.[0] || ed.second_pg_subject1 || "",
+            second_pg_subject2:
+              ed.second_post_graduation?.subjects?.[1] || ed.second_pg_subject2 || "",
+            second_pg_subject3:
+              ed.second_post_graduation?.subjects?.[2] || ed.second_pg_subject3 || "",
+            second_pg_college_name:
+              ed.second_post_graduation?.college_name || ed.second_pg_college_name || "",
+            second_pg_current_year:
+              ed.second_post_graduation?.current_year || ed.second_pg_current_year || "",
+            phd_research_field: ed.phd?.research_field || ed.phd_research_field || "",
+            phd_university: ed.phd?.university || ed.phd_university || "",
+            phd_university_name: ed.phd?.university_name || ed.phd_university_name || "",
+            phd_current_year: ed.phd?.current_year || ed.phd_current_year || "",
+            other_course_code: ed.other?.course_code || ed.other_course_code || "",
+            other_course_specialization: ed.other?.specialization || ed.other_course_specialization || "",
+            other_course_full_name: ed.other?.course_full_name || ed.other_course_full_name || "",
+            other_education_full_name: ed.other?.education_full_name || ed.other_education_full_name || "",
+            other_education_current_year: ed.other?.current_year || ed.other_education_current_year || "",
           });
         }
+
+        setSports({
+          isSportsPerson: !!sp.isSportsPerson,
+          sportName: sp.sportName || "",
+          otherSportName: sp.otherSportName || "",
+          participationLevel: sp.participationLevel || "",
+          otherParticipationLevel: sp.otherParticipationLevel || "",
+          achievementType: sp.achievementType || "",
+          otherAchievementType: sp.otherAchievementType || "",
+          participationYear: sp.participationYear ? String(sp.participationYear) : "",
+          sportsQuotaEligible: !!sp.sportsQuotaEligible,
+        });
       })
       .catch((err) => {
         toast.error("Error fetching profile");
@@ -637,6 +729,11 @@ export default function Userprofilefillingpage({ onClose }) {
     setEdu((prev) => ({ ...prev, [name]: value }));
   }
 
+  function handleSportsChange(e) {
+    const { name, value, type, checked } = e.target;
+    setSports((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  }
+
   // ─── Pref handlers ────────────────────────────────────────────────────────
 
   function togglePref(opt) {
@@ -651,8 +748,19 @@ export default function Userprofilefillingpage({ onClose }) {
 
   function validateStep1() {
     const { name, phone, gender, date_of_birth, state, district, current_location, current_status } = personal;
-    if (!name || !phone || !gender || !date_of_birth || !state || !district || !current_location || !current_status) {
-      toast.error("Please fill all required fields");
+    const missingFields = [
+      { label: "Full Name", value: name },
+      { label: "Phone Number", value: phone },
+      { label: "Gender", value: gender },
+      { label: "Date of Birth", value: date_of_birth },
+      { label: "State", value: state },
+      { label: "District", value: district },
+      { label: "Current Location", value: current_location },
+      { label: "Occupation / Status", value: current_status },
+    ].filter((field) => !String(field.value || "").trim());
+
+    if (missingFields.length > 0) {
+      toast.error(`Missing required field${missingFields.length > 1 ? "s" : ""}: ${missingFields.map((f) => f.label).join(", ")}`);
       return false;
     }
     if (calcAge(date_of_birth) < 18) {
@@ -677,11 +785,14 @@ export default function Userprofilefillingpage({ onClose }) {
 
   function buildPayload() {
     const backendQ = mapQualToBackend(q);
-
+ 
     const profilePayload = {
       name: toNull(personal.name),
       email: toNull(personal.email),
       phone: toNull(personal.phone),
+      mobile_number: toNull(personal.phone),
+      mobile: toNull(personal.phone),
+      contact_number: toNull(personal.phone),
       gender: toNull(personal.gender?.toLowerCase()),
       date_of_birth: toNull(personal.date_of_birth),
       state: toNull(personal.state),
@@ -795,7 +906,31 @@ export default function Userprofilefillingpage({ onClose }) {
       other_education_current_year: q === "other-edu" ? toNull(edu.other_education_current_year) : null,
     };
 
-    return { profile: profilePayload, education: educationPayload };
+    const sportsPayload = {
+      isSportsPerson: !!sports.isSportsPerson,
+      sportName: sports.isSportsPerson ? toNull(sports.sportName) : null,
+      otherSportName:
+        sports.isSportsPerson && sports.sportName === "Other"
+          ? toNull(sports.otherSportName)
+          : null,
+      participationLevel: sports.isSportsPerson ? toNull(sports.participationLevel) : null,
+      otherParticipationLevel:
+        sports.isSportsPerson && sports.participationLevel === "Other"
+          ? toNull(sports.otherParticipationLevel)
+          : null,
+      achievementType: sports.isSportsPerson ? toNull(sports.achievementType) : null,
+      otherAchievementType:
+        sports.isSportsPerson && sports.achievementType === "Other"
+          ? toNull(sports.otherAchievementType)
+          : null,
+      participationYear:
+        sports.isSportsPerson && sports.participationYear
+          ? Number(sports.participationYear)
+          : null,
+      sportsQuotaEligible: sports.isSportsPerson ? !!sports.sportsQuotaEligible : false,
+    };
+
+    return { profile: profilePayload, education: educationPayload, sports: sportsPayload };
   }
 
   // ─── Submit ───────────────────────────────────────────────────────────────
@@ -810,21 +945,29 @@ export default function Userprofilefillingpage({ onClose }) {
     try {
       let res;
       try {
-        res = await axios.put(API_PROFILE, payload, {
+        res = await axios.put(API_USER_PROFILE, payload, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         });
       } catch {
-        res = await axios.put(API_PROFILE, payload, {
+        res = await axios.put(API_USER_PROFILE, payload, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         });
       }
 
-      if (res.data?.status) {
-        toast.success("Profile created successfully! Redirecting to Student Dashboard...");
+      const isSuccess = res.status >= 200 && res.status < 300 && res.data?.status !== false;
+
+      if (isSuccess) {
+        toast.success(res.data?.message || "Profile updated successfully! Redirecting to Student Dashboard...");
         setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-        if (onClose) onClose();
-        setTimeout(() => navigate("/user-dashboard"), 3200);
+
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 5900);
+
+        setTimeout(() => {
+          navigate("/user-dashboard", { replace: true });
+          if (onClose) onClose();
+        }, 6000);
       } else {
         toast.error(res.data?.message || "Save failed");
       }
@@ -1234,13 +1377,34 @@ export default function Userprofilefillingpage({ onClose }) {
         url="https://www.careermitra.in/user-profile-filling"
       />
       {showConfetti && (
-        <Confetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          recycle={false}
-          numberOfPieces={500}
-          gravity={0.3}
-        />
+        <>
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={420}
+            gravity={0.22}
+            initialVelocityX={{ min: 5, max: 14 }}
+            initialVelocityY={{ min: -24, max: -12 }}
+            wind={0.06}
+            colors={RAINBOW_CONFETTI_COLORS}
+            confettiSource={{ x: 0, y: window.innerHeight - 40, w: 24, h: 24 }}
+            style={{ position: "fixed", top: 0, left: 0, zIndex: 9999, pointerEvents: "none" }}
+          />
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={420}
+            gravity={0.22}
+            initialVelocityX={{ min: -14, max: -5 }}
+            initialVelocityY={{ min: -24, max: -12 }}
+            wind={-0.06}
+            colors={RAINBOW_CONFETTI_COLORS}
+            confettiSource={{ x: window.innerWidth - 24, y: window.innerHeight - 40, w: 24, h: 24 }}
+            style={{ position: "fixed", top: 0, left: 0, zIndex: 9999, pointerEvents: "none" }}
+          />
+        </>
       )}
 
       <div className="max-w-3xl mx-auto px-4">
@@ -1419,6 +1583,9 @@ export default function Userprofilefillingpage({ onClose }) {
                           disabled={!personal.stateCode}
                         >
                           <option value="">Select District</option>
+                          {personal.district && !allCities.some((c) => c.name === personal.district) && (
+                            <option value={personal.district}>{personal.district}</option>
+                          )}
                           {allCities.map((c) => (
                             <option key={c.name} value={c.name}>{c.name}</option>
                           ))}
@@ -1906,6 +2073,133 @@ export default function Userprofilefillingpage({ onClose }) {
                         )}
                       </div>
 
+                    </div>
+
+                    {/* Sports Section */}
+                    <p className="text-base font-bold text-orange-500 border-b-2 border-orange-100 pb-2 mb-5 mt-6">
+                      🏅 Sports Details
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <RadioGroup
+                          label="Are you a Sports Person?"
+                          name="isSportsPerson"
+                          value={sports.isSportsPerson ? "Yes" : "No"}
+                          options={["Yes", "No"]}
+                          onChange={(e) =>
+                            setSports((prev) => ({
+                              ...prev,
+                              isSportsPerson: e.target.value === "Yes",
+                            }))
+                          }
+                        />
+                      </div>
+
+                      {sports.isSportsPerson && (
+                        <>
+                          <Select
+                            label="Sport Name"
+                            name="sportName"
+                            value={sports.sportName}
+                            onChange={handleSportsChange}
+                          >
+                            <option value="">Select Sport</option>
+                            {[
+                              "Cricket",
+                              "Football",
+                              "Kabaddi",
+                              "Volleyball",
+                              "Badminton",
+                              "Athletics",
+                              "Hockey",
+                              "Wrestling",
+                              "Other",
+                            ].map((sport) => (
+                              <option key={sport} value={sport}>{sport}</option>
+                            ))}
+                          </Select>
+
+                          {sports.sportName === "Other" && (
+                            <Input
+                              label="Other Sport Name"
+                              name="otherSportName"
+                              value={sports.otherSportName}
+                              onChange={handleSportsChange}
+                              placeholder="Enter sport name"
+                            />
+                          )}
+
+                          <Select
+                            label="Participation Level"
+                            name="participationLevel"
+                            value={sports.participationLevel}
+                            onChange={handleSportsChange}
+                          >
+                            <option value="">Select Level</option>
+                            {["School", "District", "State", "National", "International", "Other"].map((lvl) => (
+                              <option key={lvl} value={lvl}>{lvl}</option>
+                            ))}
+                          </Select>
+
+                          {sports.participationLevel === "Other" && (
+                            <Input
+                              label="Other Participation Level"
+                              name="otherParticipationLevel"
+                              value={sports.otherParticipationLevel}
+                              onChange={handleSportsChange}
+                              placeholder="Enter level"
+                            />
+                          )}
+
+                          <Select
+                            label="Achievement Type"
+                            name="achievementType"
+                            value={sports.achievementType}
+                            onChange={handleSportsChange}
+                          >
+                            <option value="">Select Achievement</option>
+                            {["Participation", "Bronze Medal", "Silver Medal", "Gold Medal", "Winner", "Other"].map((ach) => (
+                              <option key={ach} value={ach}>{ach}</option>
+                            ))}
+                          </Select>
+
+                          {sports.achievementType === "Other" && (
+                            <Input
+                              label="Other Achievement Type"
+                              name="otherAchievementType"
+                              value={sports.otherAchievementType}
+                              onChange={handleSportsChange}
+                              placeholder="Enter achievement"
+                            />
+                          )}
+
+                          <Input
+                            label="Participation Year"
+                            name="participationYear"
+                            type="number"
+                            min="1950"
+                            max={new Date().getFullYear()}
+                            value={sports.participationYear}
+                            onChange={handleSportsChange}
+                            placeholder="e.g. 2018"
+                          />
+
+                          <div className="flex items-center gap-2 mt-7">
+                            <input
+                              id="sportsQuotaEligible"
+                              name="sportsQuotaEligible"
+                              type="checkbox"
+                              checked={sports.sportsQuotaEligible}
+                              onChange={handleSportsChange}
+                              className="w-4 h-4 text-orange-500 rounded border-gray-300 focus:ring-orange-400"
+                            />
+                            <label htmlFor="sportsQuotaEligible" className="text-sm text-gray-700">
+                              Eligible for Sports Quota
+                            </label>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Navigation */}

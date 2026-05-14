@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Mail, Bell, ArrowRight, Zap, ChevronRight, Users, Briefcase, Award } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 const ComingSoon = () => {
   const [email, setEmail] = React.useState('');
@@ -49,6 +50,13 @@ const ComingSoon = () => {
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
+      <SEO
+        title="Coming Soon | Career Mitra"
+        description="New features are coming soon on Career Mitra to help aspirants discover better opportunities faster."
+        keywords="coming soon, career mitra updates, new features"
+        image="/NewLogo.png"
+        url="https://careermitra.in/coming-soon"
+      />
       
       {/* Animated Background Elements */}
       {/* <div className="fixed inset-0 pointer-events-none">

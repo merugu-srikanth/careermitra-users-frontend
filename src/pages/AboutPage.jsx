@@ -7,6 +7,7 @@ import {
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const stats = [
@@ -536,6 +537,13 @@ function CTASection() {
 export default function AboutPage() {
   return (
     <div className=" relative min-h-screen bg-white font-sans antialiased">
+      <SEO
+        title="About Us | Career Mitra"
+        description="Learn about Career Mitra's mission, team, and vision to support aspirants in government career journeys."
+        keywords="about career mitra, government career guidance, mission, team"
+        image="/NewLogo.png"
+        url="https://careermitra.in/about-us"
+      />
       {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.03]"

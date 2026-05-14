@@ -5,6 +5,7 @@ import {
   FaWhatsapp, FaArrowRight, FaCheckCircle
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import SEO from "../components/SEO";
 
 // ─── FLOATING ICONS DATA ──────────────────────────────────────────────────────
 const floatingIcons = [
@@ -215,6 +216,13 @@ export default function ContactSection() {
       id="contact"
       className="relative bg-white py-24 px-6 overflow-hidden"
     >
+      <SEO
+        title="Contact Us | Career Mitra"
+        description="Get in touch with Career Mitra for guidance on government jobs, internships, and career planning."
+        keywords="contact career mitra, support, government job guidance, career help"
+        image="/NewLogo.png"
+        url="https://careermitra.in/contact-us"
+      />
       <FloatingBg />
 
       {/* subtle top divider line */}

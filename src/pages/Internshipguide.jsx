@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SEO from "../components/SEO";
 
 /* ─── All FAQ data (exact content preserved) ───────────────────────────── */
 const FAQS = [
@@ -338,6 +339,13 @@ export default function InternshipGuide() {
       className="relative min-h-screen overflow-x-hidden"
       style={{ background: "#ffffff", fontFamily: "'Segoe UI', system-ui, sans-serif" }}
     >
+      <SEO
+        title="Internship Guide | Career Mitra"
+        description="Complete internship guidance for students and aspirants with FAQs, tips, and practical direction."
+        keywords="internship guide, internship tips, government internships, student career guidance"
+        image="/NewLogo.png"
+        url="https://careermitra.in/internship-guide"
+      />
       {/* ── Ambient animated background ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         {/* Large soft blobs */}
