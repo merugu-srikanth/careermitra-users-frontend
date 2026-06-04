@@ -1,43 +1,52 @@
-name: Deploy User Frontend (Vite React)
+name: Deploy Frontend
 
 on:
   push:
     branches:
       - main
+      - prod
 
 jobs:
   deploy:
     runs-on: self-hosted
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout code
+      # Checkout source code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Install dependencies
-      - name: Install dependencies
+      # Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      # 3. Build project (Vite → dist/)
-      - name: Build project
+      # Build Vite project
+      - name: Build Project
         run: npm run build
 
-      # 4. Deploy safely (no broken state)
-      - name: Deploy build to server
+      # Determine deployment target
+      - name: Set Deployment Variables
         run: |
-          echo "Starting deployment..."
+          if [ "${{ github.ref_name }}" = "prod" ]; then
+            echo "DEPLOY_DIR=/var/www/careermitra-prod" >> $GITHUB_ENV
+            echo "DOMAIN=careermitra.in" >> $GITHUB_ENV
+            echo "ENVIRONMENT=Production" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_DIR=/var/www/careermitra-user" >> $GITHUB_ENV
+            echo "DOMAIN=careermitra.tech" >> $GITHUB_ENV
+            echo "ENVIRONMENT=Staging" >> $GITHUB_ENV
+          fi
 
-          # Create temp folder
-          rm -rf /var/www/careermitra-user-temp
-          mkdir -p /var/www/careermitra-user-temp
+      # Deploy
+      - name: Deploy Application
+        run: |
+          echo "=================================="
+          echo "Environment : $ENVIRONMENT"
+          echo "Domain      : $DOMAIN"
+          echo "Deploy Dir  : $DEPLOY_DIR"
+          echo "=================================="
 
-          # Copy new build
-          cp -r dist/* /var/www/careermitra-user-temp/
+          mkdir -p "$DEPLOY_DIR"
 
-          # Remove old build
-          rm -rf /var/www/careermitra-user/*
-
-          # Move new build to live folder
-          mv /var/www/careermitra-user-temp/* /var/www/careermitra-user/
+          rsync -av --delete dist/ "$DEPLOY_DIR"/
 
           echo "Deployment completed successfully 🚀"
